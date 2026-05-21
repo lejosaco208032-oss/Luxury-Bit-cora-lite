@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Luxury Bitácora Élite v8.7</title>
+
+    <meta name="theme-color" content="#0a0a0a">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
+    <style>
+        /* ===== VARIABLES DE DISEÑO LUXURY ===== */
+        :root {
+            --bg-color: #0a0a0a;
+            --card-bg: #141414;
+            --accent-gold: #d4af37;
+            --text-main: #ffffff;
+            --text-muted: #aaaaaa;
+            --border-color: #222222;
+            --danger: #ff4d4d;
+            --success: #2ecc71;
+            --warning: #f1c40f;
+            --whatsapp-color: #128c7e;
+            --maps-blue: #4285F4;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: var(--text-main);
+            padding-bottom: 90px;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* ===== VISTAS / PESTAÑAS ===== */
+        .view {
+            display: none;
+        }
+        .view.active {
+            display: block;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-main);
+            border-left: 4px solid var(--accent-gold);
+            padding-left: 10px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+        }
+
+        /* METRICAS */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .metric-card span {
+            display: block;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--accent-gold);
+        }
+
+        .metric-card label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* FORMULARIOS */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--accent-gold);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 14px;
+            background: #1f1f1f;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: #fff;
+            outline: none;
+            font-size: 0.95rem;
+            transition: border 0.3s, box-shadow 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: var(--accent-gold);
+        }
+
+        .form-group.error input {
+            border-color: var(--danger) !important;
+            box-shadow: 0 0 8px rgba(255, 77, 77, 0.2);
+        }
+
+        /* BOTONES */
+        .btn-main {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #d4af37, #aa841e);
+            border: none;
+            border-radius: 10px;
+            color: #000;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            margin-bottom: 10px;
+        }
+
+        .btn-main:active { transform: scale(0.98); }
+
+        /* CONFIGURACIÓN DEL CONTENEDOR DEL MAPA INTERNAL */
+        #map {
+            width: 100%;
+            height: 350px;
+            border-radius: 14px;
+            margin-top: 10px;
+            border: 1px solid #333;
+            background-color: #111;
+            z-index: 1;
+        }
+
+        /* HISTORIAL DE TURNOS */
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 16px;
+            border-radius: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: transform 0.2s, opacity 0.3s;
+        }
+
+        .history-item.removing {
+            animation: collapseRow 0.3s forwards ease-in-out;
+        }
+
+        @keyframes collapseRow {
+            to { opacity: 0; transform: translateX(100px); height: 0; padding: 0; margin: 0; border: none; }
+        }
+
+        .history-info h4 { margin: 0 0 4px 0; font-size: 1.05rem; color: #fff; }
+        .history-info p { margin: 0; font-size: 0.85rem; color: var(--text-muted); }
+        .history-info .note { font-size: 0.8rem; color: var(--accent-gold); margin-top: 4px; font-style: italic; }
+        
+        .history-actions { display: flex; align-items: center; gap: 10px; }
+        .history-badge {
+            background: rgba(212, 175, 55, 0.12);
+            color: var(--accent-gold);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border: 1px solid rgba(212, 175, 55, 0.25);
+        }
+
+        .btn-action {
+            background: none; border: none; color: var(--text-muted);
+            cursor: pointer; font-size: 1.1rem; padding: 5px; transition: color 0.2s, transform 0.1s;
+        }
+        .btn-action:active { transform: scale(0.9); }
+        .btn-action.map-trigger:hover { color: var(--maps-blue); }
+        .btn-action.delete-trigger:hover { color: var(--danger); }
+
+        /* ===== TOAST NOTIFICATIONS ===== */
+        #toast-container {
+            position: fixed;
+            top: 20px; right: 20px; left: 20px;
+            max-width: 400px;
+            margin: 0 auto;
+            z-index: 100000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        @media(min-width: 480px) {
+            #toast-container { left: auto; right: 20px; width: 350px; }
+        }
+
+        .toast {
+            background: rgba(20, 20, 20, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-left: 4px solid var(--accent-gold);
+            border-top: 1px solid rgba(255,255,255,0.05);
+            color: #fff;
+            padding: 14px 18px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            pointer-events: auto;
+            animation: slideInToast 0.3s ease forwards;
+        }
+
+        @keyframes slideInToast {
+            from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .toast-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem; }
+
+        /* ===== MODAL PARA ELIMINACIONES ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100001;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+            padding: 20px;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 24px; border-radius: 20px;
+            max-width: 400px; width: 100%; text-align: center;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+            transform: scale(0.9); transition: transform 0.3s ease;
+        }
+        .modal-overlay.open .modal-content { transform: scale(1); }
+
+        .modal-buttons { display: flex; gap: 12px; }
+        .btn-modal { flex: 1; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; border: none; font-size: 0.95rem; }
+        .btn-modal.confirm { background: var(--danger); color: white; }
+        .btn-modal.cancel { background: #222; color: var(--text-muted); }
+
+        /* BOTTOM NAVBAR */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: rgba(20, 20, 20, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border-color);
+            display: flex; justify-content: space-around;
+            padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px)) 0;
+            z-index: 9999;
+        }
+
+        .nav-item {
+            background: none; border: none; color: var(--text-muted);
+            display: flex; flex-direction: column; align-items: center;
+            font-size: 0.75rem; cursor: pointer; width: 20%; transition: color 0.3s;
+        }
+
+        .nav-item span.icon { font-size: 1.4rem; margin-bottom: 4px; }
+        .nav-item.active { color: var(--accent-gold); font-weight: bold; }
+
+        .chart-bar { height: 20px; background: #222; border-radius: 10px; overflow: hidden; margin-top: 8px; }
+        .chart-progress { height: 100%; background: linear-gradient(90deg, #aa841e, #d4af37); width: 0%; transition: width 0.5s ease; }
+    
+html, body { overscroll-behavior-y: contain !important; overscroll-behavior: contain !important; }
+</style>
+    
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Luxury Bitácora Élite v8.7">
+    <link rel="apple-touch-icon" href="icons/apple-icon-180x180.png">
+    <meta name="theme-color" content="#0a0a0a">
+    <link rel="manifest" href="manifest.json">
+    <script src="register-sw.js" defer=""></script>
+            </head>
+
+<body>
+
+<div id="toast-container"></div>
+
+<div id="delete-modal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 style="color:#fff; margin-bottom:10px;">¿Eliminar Registro?</h3>
+        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">Esta acción removerá el turno de forma permanente del almacenamiento local.</p>
+        <div class="modal-buttons">
+            <button class="btn-modal cancel" onclick="closeDeleteModal()">Cancelar</button>
+            <button class="btn-modal confirm" id="btn-confirm-delete">Eliminar</button>
+        </div>
+    </div>
+</div>
+
+<div class="app-container">
+
+    <div id="v-metrics" class="view active">
+        <h1>Dashboard Élite</h1>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <span id="st-t">0</span>
+                <label>Turnos Totales</label>
+            </div>
+            <div class="metric-card">
+                <span id="st-h">0</span>
+                <label>Horas Totales</label>
+            </div>
+        </div>
+        <div class="metrics-grid">
+            <div class="metric-card" style="grid-column: span 2;">
+                <span id="st-cash">$0.00</span>
+                <label>Ingresos Estimados ($15k/h)</label>
+            </div>
+        </div>
+
+        <div class="card">
+            <label style="color: var(--accent-gold); font-size: 0.8rem; font-weight: bold;">Meta Operativa Mensual</label>
+            <div class="chart-bar">
+                <div id="metric-progress" class="chart-progress"></div>
+            </div>
+            <p id="progress-desc" style="font-size:0.8rem; color:var(--text-muted); margin: 8px 0 0 0;">0% completado.</p>
+        </div>
+
+        <div class="card">
+            <label style="color: var(--accent-gold); font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 12px; text-transform: uppercase;">Exportación de Datos</label>
+            <button class="btn-main" onclick="exportExcel()">📊 Descargar Excel (CSV ;)</button>
+            <button class="btn-main" style="background: var(--whatsapp-color); color: white; margin-bottom: 5px;" onclick="wa()">📲 Compartir vía WhatsApp</button>
+            <button class="btn-main" style="background: #222; color: var(--danger); margin-top: 10px; font-size: 0.85rem;" onclick="clearAllData()">🗑️ Limpiar Base de Datos</button>
+        </div>
+    </div>
+
+    <div id="v-register" class="view">
+        <h1>Registrar Turno Manual</h1>
+        <div class="card">
+            <div class="form-group" id="group-lugar">
+                <label>Centro de Trabajo / Lugar *</label>
+                <input type="text" id="f-lugar" placeholder="Ej. Planta Central, Barranquilla" oninput="clearError('group-lugar')">
+            </div>
+            <div class="form-group" id="group-fecha">
+                <label>Fecha del Servicio *</label>
+                <input type="date" id="f-fecha" oninput="clearError('group-fecha')">
+            </div>
+            <div class="form-group">
+                <label>Horas Laboradas</label>
+                <input type="number" id="f-horas" value="8" min="1" max="24">
+            </div>
+            <div class="form-group">
+                <label>Jornada</label>
+                <select id="f-jornada">
+                    <option value="Diurno">Diurno ☀️</option>
+                    <option value="Nocturno">Nocturno 🌙</option>
+                    <option value="Mixto">Mixto 🔄</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Notas / Observaciones</label>
+                <textarea id="f-notas" rows="2" placeholder="Novedades del turno..."></textarea>
+            </div>
+            <button class="btn-main" onclick="saveManualTurno()">💾 Guardar en Bitácora</button>
+        </div>
+    </div>
+
+    <div id="v-map" class="view">
+        <h1>Geolocalización Operativa</h1>
+        <div class="card">
+            <label style="color:#d4af37; font-weight:700; font-size:0.75rem; text-transform: uppercase;">🗺️ Rastreo de Cobertura</label>
+            <div id="map"></div>
+            <div class="form-group" style="margin-top:15px;">
+                <input type="text" id="mapSearch" placeholder="Buscar dirección rápida (Ej: Bogotá)...">
+            </div>
+            <button class="btn-main" onclick="searchMap()">🔎 Ubicar y Añadir por Mapa</button>
+        </div>
+    </div>
+
+    <div id="v-list" class="view">
+        <h1>Registros Históricos</h1>
+        <div id="lista"></div>
+    </div>
+
+</div>
+
+<nav class="bottom-nav">
+    <button class="nav-item active" onclick="switchView('v-metrics', this)"><span class="icon">📊</span><span>Métricas</span></button>
+    <button class="nav-item" onclick="switchView('v-register', this)"><span class="icon">📝</span><span>Registrar</span></button>
+    <button class="nav-item" onclick="switchView('v-map', this)"><span class="icon">🗺️</span><span>Mapa</span></button>
+    <button class="nav-item" onclick="switchView('v-list', this)"><span class="icon">📋</span><span>Historial</span></button>
+</nav>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script>
+let db = JSON.parse(localStorage.getItem('luxury_db')) || [];
+let leafletMap;
+let leafletMarkers = [];
+let activeIdToDelete = null;
+const valorHora = 15000;
+
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    let icon = type === 'success' ? '✅' : type === 'danger' ? '🗑️' : '⚠️';
+    toast.innerHTML = `<span>${icon} &nbsp;${message}</span><button class="toast-close" onclick="this.parentElement.remove()">✕</button>`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 4000);
+}
+
+function clearError(divId) { document.getElementById(divId).classList.remove('error'); }
+
+function switchView(viewId, element) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    document.getElementById(viewId).classList.add('active');
+    element.classList.add('active');
+    if(viewId === 'v-map') {
+        setTimeout(() => {
+            if (!leafletMap) {
+                leafletMap = L.map('map').setView([10.9639, -74.7964], 12);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(leafletMap);
+            } else {
+                leafletMap.invalidateSize();
+            }
+            loadMarkers();
+        }, 250);
+    }
+}
+
+function loadMarkers() {
+    leafletMarkers.forEach(m => leafletMap.removeLayer(m));
+    leafletMarkers = [];
+    db.forEach((r, idx) => {
+        if (r.lugar) {
+            let latOffset = (idx * 0.005) * (idx % 2 === 0 ? 1 : -1);
+            let lngOffset = (idx * 0.005) * (idx % 2 === 0 ? -1 : 1);
+            let marker = L.marker([10.9639 + latOffset, -74.7964 + lngOffset]).addTo(leafletMap)
+                          .bindPopup(`<b>${r.lugar}</b><br>${r.jornada}`);
+            leafletMarkers.push(marker);
+        }
+    });
+}
+
+// INTERACCIÓN DIRECTA CON EL GOOGLE MAPS DEL TELÉFONO
+function openNativeGoogleMaps(address) {
+    if (!address) return;
+    showToast("Abriendo Google Maps en tu teléfono...", "success");
+    
+    // Intentar abrir mediante la URL universal de navegación (Funciona nativamente en Android e iOS)
+    const encodedAddress = encodeURIComponent(address);
+    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
+    
+    // Abrir de inmediato la aplicación del sistema operativo
+    window.open(googleMapsUrl, '_blank');
+}
+
+async function searchMap() {
+    const address = document.getElementById("mapSearch").value.trim();
+    if (!address) { showToast("Por favor escribe una ubicación", "warning"); return; }
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
+        const data = await response.json();
+        if (data && data.length > 0) {
+            const lat = parseFloat(data[0].lat);
+            const lon = parseFloat(data[0].lon);
+            leafletMap.setView([lat, lon], 14);
+            L.marker([lat, lon]).addTo(leafletMap).bindPopup(`<b>${address}</b>`).openPopup();
+            executeSave(address, new Date().toISOString().split('T')[0], 8, "Diurno", "Añadido desde mapa");
+            document.getElementById("mapSearch").value = "";
+            showToast("Ubicación guardada.");
+        } else { showToast("Lugar no encontrado.", "warning"); }
+    } catch (e) { showToast("Error en servidores de mapa.", "danger"); }
+}
+
+function saveManualTurno() {
+    const lugar = document.getElementById('f-lugar');
+    const fecha = document.getElementById('f-fecha');
+    const horas = document.getElementById('f-horas').value;
+    const jornada = document.getElementById('f-jornada').value;
+    const notas = document.getElementById('f-notas').value.trim();
+    if (!lugar.value.trim() || !fecha.value) { showToast("Rellena los campos obligatorios", "warning"); return; }
+    executeSave(lugar.value.trim(), fecha.value, horas, jornada, notas);
+    lugar.value = ""; document.getElementById('f-notas').value = "";
+    showToast("Turno guardado.");
+    switchView('v-list', document.querySelectorAll('.nav-item')[3]);
+}
+
+function executeSave(lugar, fecha, horas, jornada, notas) {
+    db.push({ id: Date.now(), fecha, jornada, lugar, horas: parseFloat(horas), notas: notas || "" });
+    localStorage.setItem("luxury_db", JSON.stringify(db));
+    refreshSystem();
+}
+
+function openDeleteModal(id) { activeIdToDelete = id; document.getElementById('delete-modal').classList.add('open'); }
+function closeDeleteModal() { document.getElementById('delete-modal').classList.remove('open'); activeIdToDelete = null; }
+
+document.getElementById('btn-confirm-delete').addEventListener('click', () => {
+    if (activeIdToDelete) {
+        db = db.filter(item => item.id !== activeIdToDelete);
+        localStorage.setItem("luxury_db", JSON.stringify(db));
+        refreshSystem();
+        showToast("Registro eliminado", "danger");
+        closeDeleteModal();
+    }
+});
+
+function exportExcel() {
+    if(db.length === 0) { showToast('No hay datos.', 'warning'); return; }
+    let csvContent = "\uFEFFFecha de Servicio;Jornada Laboral;Ubicación / Centro;Horas Realizadas;Notas\n";
+    db.forEach(r => { csvContent += `${r.fecha};${r.jornada};${r.lugar};${r.horas};${r.notas}\n`; });
+    const link = document.createElement("a");
+    link.setAttribute("href", URL.createObjectURL(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })));
+    link.setAttribute("download", `Bitacora_v8.7.csv`);
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+}
+
+function wa() {
+    if(db.length === 0) { showToast('No hay datos.', 'warning'); return; }
+    let texto = `👑 *LUXURY BITÁCORA ÉLITE v8.7*\n====================================\n\n`;
+    let totalHrs = 0;
+    db.forEach((r, i) => {
+        texto += `*📋 REGISTRO Nº ${i + 1}*\n📅 *Fecha:* ${r.fecha}\n📍 *Lugar:* ${r.lugar}\n⏱️ *Horas:* ${r.horas} Hrs\n------------------------------------\n\n`;
+        totalHrs += r.horas;
+    });
+    texto += `📊 *TOTAL:* ${totalHrs} Hrs ($${(totalHrs * valorHora).toLocaleString()})`;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
+}
+
+function clearAllData() {
+    if(confirm('¿Borrar toda la base de datos?')) { db = []; localStorage.removeItem('luxury_db'); refreshSystem(); }
+}
+
+function refreshSystem() {
+    const lista = document.getElementById('lista');
+    lista.innerHTML = "";
+    let horasTotales = 0;
+    db.sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+    if(db.length === 0) { lista.innerHTML = `<p style="text-align:center; color:var(--text-muted); margin-top:40px;">No hay turnos.</p>`; }
+    
+    db.forEach(r => {
+        horasTotales += r.horas;
+        lista.insertAdjacentHTML("beforeend", `
+            <div class="history-item" id="row-${r.id}">
+                <div class="history-info">
+                    <h4>${r.lugar}</h4>
+                    <p>📅 ${r.fecha} | 💼 ${r.jornada}</p>
+                    ${r.notas ? `<div class="note">💬 ${r.notas}</div>` : ''}
+                </div>
+                <div class="history-actions">
+                    <div class="history-badge">${r.horas} Hrs</div>
+                    <button class="btn-action map-trigger" onclick="openNativeGoogleMaps('${r.lugar.replace(/'/g, "\\'")}')" title="Abrir en Google Maps de mi teléfono">🗺️</button>
+                    <button class="btn-action delete-trigger" onclick="openDeleteModal(${r.id})">🗑️</button>
+                </div>
+            </div>
+        `);
+    });
+    document.getElementById('st-t').innerText = db.length;
+    document.getElementById('st-h').innerText = horasTotales;
+    document.getElementById('st-cash').innerText = `$${(horasTotales * valorHora).toLocaleString()}`;
+    let porcentaje = Math.min((horasTotales / 160) * 100, 100);
+    document.getElementById('metric-progress').style.width = `${porcentaje}%`;
+    document.getElementById('progress-desc').innerText = `${porcentaje.toFixed(1)}% de tu meta mensual.`;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById('f-fecha').value = new Date().toISOString().split('T')[0];
+    refreshSystem();
+});
+</script>
+
+
+    <div id="pwa-install-banner" style="position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(150px); width: 90%; max-width: 400px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 14px 18px; border-radius: 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); z-index: 99999; transition: transform 0.4s ease; font-family: sans-serif;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <img src="icons/icon-128x128.png" style="width: 40px; height: 40px; border-radius: 8px; object-fit: contain; background-color: #222222;">
+            <div style="display: flex; flex-direction: column;">
+                <span style="color: #ffffff; font-size: 14px; font-weight: 600;">Luxury Bitácora Élite v8.7</span>
+                <span style="color: #94a3b8; font-size: 11px;">Instalar en pantalla de inicio</span>
+            </div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button id="pwa-cancel-btn" style="background: transparent; border: none; color: #64748b; font-size: 12px; cursor: pointer; padding: 6px;">Later</button>
+            <button id="pwa-accept-btn" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; color: #ffffff; font-size: 12px; font-weight: 600; cursor: pointer; padding: 8px 14px; border-radius: 8px;">Instalar</button>
+        </div>
+    </div>
+    <script>
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); window.deferredPrompt = e;
+            const b = document.getElementById('pwa-install-banner');
+            if(b) b.style.transform = 'translateX(-50%) translateY(0)';
+        });
+        document.getElementById('pwa-cancel-btn')?.addEventListener('click', () => {
+            document.getElementById('pwa-install-banner').style.transform = 'translateX(-50%) translateY(150px)';
+        });
+        document.getElementById('pwa-accept-btn')?.addEventListener('click', async () => {
+            if (window.deferredPrompt) {
+                window.deferredPrompt.prompt();
+                window.deferredPrompt = null;
+                document.getElementById('pwa-install-banner').style.transform = 'translateX(-50%) translateY(150px)';
+            }
+        });
+    </script>
+    <script>
+        window.addEventListener('touchstart', function(e) {
+            if (window.scrollY === 0) { this.allowUp = false; } else { this.allowUp = true; }
+        }, { passive: false });
+        window.addEventListener('touchmove', function(e) {
+            if (window.scrollY === 0 && e.touches[0].clientY > (this.initY || 0)) {
+                if (document.body.scrollTop === 0) { e.preventDefault(); }
+            }
+        }, { passive: false });
+    </script>
+            </body></html>
