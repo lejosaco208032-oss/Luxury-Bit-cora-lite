@@ -2,7 +2,7 @@
 <html lang="es"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title id="app-meta-title">Luxury Bitácora Élite v8.8</title>
+    <title id="app-meta-title">Luxury Bitácora Élite v8.9</title>
 
     <meta name="theme-color" content="#0a0a0a">
 
@@ -195,7 +195,7 @@
         .history-info p { margin: 0; font-size: 0.85rem; color: var(--text-muted); }
         .history-info .note { font-size: 0.8rem; color: var(--accent-gold); margin-top: 4px; font-style: italic; }
         
-        .history-actions { display: flex; align-items: center; gap: 10px; }
+        .history-actions { display: flex; align-items: center; gap: 8px; }
         .history-badge {
             background: rgba(212, 175, 55, 0.12);
             color: var(--accent-gold);
@@ -212,6 +212,8 @@
         }
         .btn-action:active { transform: scale(0.9); }
         .btn-action.map-trigger:hover { color: var(--maps-blue); }
+        .btn-action.wa-trigger:hover { color: var(--whatsapp-color); }
+        .btn-action.preview-trigger:hover { color: var(--accent-gold); }
         .btn-action.delete-trigger:hover { color: var(--danger); }
 
         /* ===== TOAST NOTIFICATIONS ===== */
@@ -256,13 +258,13 @@
 
         .toast-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem; }
 
-        /* ===== MODAL PARA ELIMINACIONES ===== */
+        /* ===== MODAL GENERAL Y TARJETA FLOTANTE ===== */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
             display: flex; align-items: center; justify-content: center;
             z-index: 100001;
             opacity: 0; pointer-events: none;
@@ -275,16 +277,36 @@
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             padding: 24px; border-radius: 20px;
-            max-width: 400px; width: 100%; text-align: center;
+            max-width: 420px; width: 100%; text-align: center;
             box-shadow: 0 15px 40px rgba(0,0,0,0.8);
             transform: scale(0.9); transition: transform 0.3s ease;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
         }
         .modal-overlay.open .modal-content { transform: scale(1); }
+
+        .floating-card-body {
+            background: #181818;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 14px;
+            padding: 16px;
+            text-align: left;
+            margin: 15px 0;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #e2e8f0;
+            white-space: pre-wrap;
+            line-height: 1.4;
+            max-height: 45vh;
+        }
 
         .modal-buttons { display: flex; gap: 12px; }
         .btn-modal { flex: 1; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; border: none; font-size: 0.95rem; }
         .btn-modal.confirm { background: var(--danger); color: white; }
         .btn-modal.cancel { background: #222; color: var(--text-muted); }
+        .btn-modal.wa-action { background: var(--whatsapp-color); color: white; }
 
         /* BOTTOM NAVBAR */
         .bottom-nav {
@@ -328,13 +350,29 @@ html, body { overscroll-behavior-y: contain !important; overscroll-behavior: con
 
 <div id="toast-container"></div>
 
+<!-- MODAL DE ELIMINACIÓN -->
 <div id="delete-modal" class="modal-overlay">
-    <div class="modal-content">
+    <div class="modal-content" style="text-align: center;">
         <h3 style="color:#fff; margin-bottom:10px;">¿Eliminar Registro?</h3>
         <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">Esta acción removerá el turno de forma permanente del almacenamiento local.</p>
         <div class="modal-buttons">
             <button class="btn-modal cancel" onclick="closeDeleteModal()">Cancelar</button>
             <button class="btn-modal confirm" id="btn-confirm-delete">Eliminar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL TARJETA FLOTANTE (VISTA Y ENVÍO INDIVIDUAL/GRUPO) -->
+<div id="floating-modal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 id="floating-modal-title" style="color:var(--accent-gold); margin-bottom:5px; font-size:1.1rem;">Tarjeta Flotante</h3>
+        <p style="color:var(--text-muted); font-size:0.75rem;">Vista previa lista para enviar a WhatsApp</p>
+        
+        <div id="floating-card-text" class="floating-card-body"></div>
+
+        <div class="modal-buttons">
+            <button class="btn-modal cancel" onclick="closeFloatingModal()">Cerrar</button>
+            <button class="btn-modal wa-action" id="btn-send-floating-wa">📲 Enviar a WhatsApp</button>
         </div>
     </div>
 </div>
@@ -371,7 +409,7 @@ html, body { overscroll-behavior-y: contain !important; overscroll-behavior: con
         <div class="card">
             <label style="color: var(--accent-gold); font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 12px; text-transform: uppercase;">Exportación y Ajustes</label>
             <button class="btn-main" onclick="exportExcel()">📊 Descargar Excel (CSV ;)</button>
-            <button class="btn-main" style="background: var(--whatsapp-color); color: white; margin-bottom: 5px;" onclick="wa()">📲 Compartir vía WhatsApp</button>
+            <button class="btn-main" style="background: var(--whatsapp-color); color: white; margin-bottom: 5px;" onclick="previewGroupWA()">📲 Ver Tarjeta Grupal y Enviar</button>
             <button class="btn-main" style="background: #222; color: var(--accent-gold); border: 1px solid var(--accent-gold); margin-top: 5px;" onclick="switchView('v-config', document.querySelectorAll('.nav-item')[4])">⚙️ Ajustes y Configuración</button>
             <button class="btn-main" style="background: #222; color: var(--danger); margin-top: 10px; font-size: 0.85rem;" onclick="clearAllData()">🗑️ Limpiar Base de Datos</button>
         </div>
@@ -455,7 +493,7 @@ html, body { overscroll-behavior-y: contain !important; overscroll-behavior: con
 <script>
 let db = JSON.parse(localStorage.getItem('luxury_db')) || [];
 let valorHora = parseFloat(localStorage.getItem('luxury_valor_hora')) || 15000;
-let appName = localStorage.getItem('luxury_app_name') || 'Luxury Bitácora Élite v8.8';
+let appName = localStorage.getItem('luxury_app_name') || 'Luxury Bitácora Élite v8.9';
 let leafletMap;
 let leafletMarkers = [];
 let activeIdToDelete = null;
@@ -572,28 +610,87 @@ function exportExcel() {
     document.body.appendChild(link); link.click(); document.body.removeChild(link);
 }
 
-function wa() {
-    if(db.length === 0) { showToast('No hay datos.', 'warning'); return; }
-    let texto = `👑 *${appName.toUpperCase()}*\n====================================\n\n`;
+/* ===== FUNCIONES DE TARJETA FLOTANTE Y WHATSAPP ===== */
+function generateSingleText(r, index = null) {
+    let text = `👑 *${appName.toUpperCase()}*\n`;
+    text += `====================\n`;
+    if(index !== null) text += `📋 *REGISTRO Nº ${index + 1}*\n`;
+    text += `📅 *Fecha:* ${r.fecha}\n`;
+    text += `📍 *Lugar:* ${r.lugar}\n`;
+    text += `💼 *Jornada:* ${r.jornada}\n`;
+    text += `⏱️ *Horas:* ${r.horas} Hrs\n`;
+    if (r.notas) {
+        text += `💬 *Notas:* ${r.notas}\n`;
+    }
+    text += `--------------------\n`;
+    text += `✅ *Estado:* Notificado con éxito`;
+    return text;
+}
+
+function generateGroupText() {
+    let text = `👑 *${appName.toUpperCase()}*\n`;
+    text += `====================================\n\n`;
     let totalHrs = 0;
     db.forEach((r, i) => {
-        texto += `*📋 REGISTRO Nº ${i + 1}*\n📅 *Fecha:* ${r.fecha}\n📍 *Lugar:* ${r.lugar}\n💼 *Jornada:* ${r.jornada}\n⏱️ *Horas:* ${r.horas} Hrs\n`;
+        text += `*📋 REGISTRO Nº ${i + 1}*\n`;
+        text += `📅 *Fecha:* ${r.fecha}\n`;
+        text += `📍 *Lugar:* ${r.lugar}\n`;
+        text += `💼 *Jornada:* ${r.jornada}\n`;
+        text += `⏱️ *Horas:* ${r.horas} Hrs\n`;
         if (r.notas) {
-            texto += `💬 *Notas:* ${r.notas}\n`;
+            text += `💬 *Notas:* ${r.notas}\n`;
         }
-        texto += `------------------------------------\n\n`;
+        text += `------------------------------------\n\n`;
         totalHrs += r.horas;
     });
     let totalIngresos = totalHrs * valorHora;
     let porcentaje = Math.min((totalHrs / 160) * 100, 100).toFixed(1);
     
-    texto += `📊 *RESUMEN GLOBAL:*\n`;
-    texto += `• Turnos Totales: ${db.length}\n`;
-    texto += `• Horas Totales: ${totalHrs} Hrs\n`;
-    texto += `• Ingresos Estimados: $${totalIngresos.toLocaleString()}\n`;
-    texto += `• Meta Mensual: ${porcentaje}% completado`;
+    text += `📊 *RESUMEN GLOBAL:*\n`;
+    text += `• Turnos Totales: ${db.length}\n`;
+    text += `• Horas Totales: ${totalHrs} Hrs\n`;
+    text += `• Ingresos Estimados: $${totalIngresos.toLocaleString()}\n`;
+    text += `• Meta Mensual: ${porcentaje}% completado\n`;
+    text += `✅ *Notificación:* Todos los turnos reportados`;
+    return text;
+}
 
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
+function previewSingleWA(id) {
+    const item = db.find(r => r.id === id);
+    if (!item) return;
+    const index = db.findIndex(r => r.id === id);
+    const textContent = generateSingleText(item, index);
+    
+    document.getElementById('floating-modal-title').innerText = `Tarjeta Turno: ${item.lugar}`;
+    document.getElementById('floating-card-text').innerText = textContent;
+    
+    const sendBtn = document.getElementById('btn-send-floating-wa');
+    sendBtn.onclick = () => {
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textContent)}`, '_blank');
+        closeFloatingModal();
+    };
+    
+    document.getElementById('floating-modal').classList.add('open');
+}
+
+function previewGroupWA() {
+    if (db.length === 0) { showToast('No hay datos para compartir.', 'warning'); return; }
+    const textContent = generateGroupText();
+    
+    document.getElementById('floating-modal-title').innerText = `Tarjeta Grupal Completa (${db.length} Turnos)`;
+    document.getElementById('floating-card-text').innerText = textContent;
+    
+    const sendBtn = document.getElementById('btn-send-floating-wa');
+    sendBtn.onclick = () => {
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textContent)}`, '_blank');
+        closeFloatingModal();
+    };
+    
+    document.getElementById('floating-modal').classList.add('open');
+}
+
+function closeFloatingModal() {
+    document.getElementById('floating-modal').classList.remove('open');
 }
 
 function clearAllData() {
@@ -625,7 +722,6 @@ function saveConfigApp() {
 }
 
 function refreshSystem() {
-    // Actualizar nombre en metadatos y encabezados de la app
     document.getElementById('app-meta-title').innerText = appName;
     document.getElementById('apple-meta-app-title').setAttribute('content', appName);
     document.getElementById('app-dashboard-title').innerText = appName;
@@ -647,8 +743,9 @@ function refreshSystem() {
                 </div>
                 <div class="history-actions">
                     <div class="history-badge">${r.horas} Hrs</div>
-                    <button class="btn-action map-trigger" onclick="openNativeGoogleMaps('${r.lugar.replace(/'/g, "\\'")}')" title="Abrir en Google Maps de mi teléfono">🗺️</button>
-                    <button class="btn-action delete-trigger" onclick="openDeleteModal(${r.id})">🗑️</button>
+                    <button class="btn-action preview-trigger" onclick="previewSingleWA(${r.id})" title="Ver Tarjeta Flotante y Enviar Individual">💬</button>
+                    <button class="btn-action map-trigger" onclick="openNativeGoogleMaps('${r.lugar.replace(/'/g, "\\'")}')" title="Abrir en Google Maps">🗺️</button>
+                    <button class="btn-action delete-trigger" onclick="openDeleteModal(${r.id})" title="Eliminar">🗑️</button>
                 </div>
             </div>
         `);
