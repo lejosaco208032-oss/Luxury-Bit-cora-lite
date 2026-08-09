@@ -2,7 +2,7 @@
 <html lang="es"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title id="app-meta-title">Luxury Bitácora Élite v9.5</title>
+    <title id="app-meta-title">Luxury Bitácora Élite v9.6</title>
 
     <meta name="theme-color" content="#0a0a0a">
 
@@ -356,7 +356,7 @@
     </div>
 </div>
 
-<!-- MODAL TARJETA FLOTANTE (VISTA Y ENVÍO INDIVIDUAL/GRUPO) -->
+<!-- MODAL TARJETA FLOTANTE -->
 <div id="floating-modal" class="modal-overlay">
     <div class="modal-content">
         <h3 id="floating-modal-title" style="color:var(--accent-gold); margin-bottom:5px; font-size:1.1rem;">Tarjeta Flotante</h3>
@@ -426,12 +426,11 @@
                 <select id="f-jornada" onchange="calculateCurrentTurnValue()">
                     <option value="Diurno">Diurno ☀️</option>
                     <option value="Nocturno">Nocturno 🌙</option>
-                    <option value="Mixto">Mixto 🔄</option>
                 </select>
             </div>
             <div class="form-group">
                 <label>Valor / Subtotal Calculado para este Turno ($)</label>
-                <input type="number" id="f-valor-turno" placeholder="Se calcula automáticamente según jornada y horas">
+                <input type="number" id="f-valor-turno" readonly style="background: #181818; color: var(--accent-gold); font-weight: bold;" placeholder="Se calcula automáticamente según la configuración">
             </div>
             <div class="form-group">
                 <label>Notas / Observaciones</label>
@@ -469,11 +468,11 @@
             <div class="metrics-grid" style="margin-bottom:0;">
                 <div class="form-group">
                     <label>Valor Hora Diurno ($)</label>
-                    <input type="number" id="cfg-valor-diurno" placeholder="Ej. 15000">
+                    <input type="number" id="cfg-valor-diurno" placeholder="Ej. 15000" oninput="updateConfigRatesLive()">
                 </div>
                 <div class="form-group">
                     <label>Valor Hora Nocturno ($)</label>
-                    <input type="number" id="cfg-valor-nocturno" placeholder="Ej. 20000">
+                    <input type="number" id="cfg-valor-nocturno" placeholder="Ej. 20000" oninput="updateConfigRatesLive()">
                 </div>
             </div>
             <button class="btn-main" onclick="saveConfigApp()" style="margin-top: 15px;">💾 Guardar Configuración</button>
@@ -502,7 +501,7 @@
 let db = JSON.parse(localStorage.getItem('luxury_db')) || [];
 let valorDiurno = parseFloat(localStorage.getItem('luxury_valor_diurno')) || 15000;
 let valorNocturno = parseFloat(localStorage.getItem('luxury_valor_nocturno')) || 20000;
-let appName = localStorage.getItem('luxury_app_name') || 'Luxury Bitácora Élite v9.5';
+let appName = localStorage.getItem('luxury_app_name') || 'Luxury Bitácora Élite v9.6';
 let leafletMap;
 let leafletMarkers = [];
 let activeIdToDelete = null;
@@ -519,16 +518,22 @@ function showToast(message, type = 'success') {
 
 function clearError(divId) { document.getElementById(divId).classList.remove('error'); }
 
-/* CÁLCULO INDIVIDUAL ESTRICTO SEGÚN LA JORNADA Y LAS HORAS DEL TURNO */
+/* CÁLCULO ESTRICTO DE ACUERDO A LAS HORAS Y EL VALOR CONFIGURADO DE CADA TURNO (DIURNO / NOCTURNO) */
 function calculateTurnoSubtotal(jornada, horas) {
     let hrs = parseFloat(horas) || 0;
     let rate = valorDiurno;
     if (jornada === 'Nocturno') {
         rate = valorNocturno;
-    } else if (jornada === 'Mixto') {
-        rate = (valorDiurno + valorNocturno) / 2;
     }
     return hrs * rate;
+}
+
+function updateConfigRatesLive() {
+    let dInput = parseFloat(document.getElementById('cfg-valor-diurno').value);
+    let nInput = parseFloat(document.getElementById('cfg-valor-nocturno').value);
+    if (!isNaN(dInput)) valorDiurno = dInput;
+    if (!isNaN(nInput)) valorNocturno = nInput;
+    calculateCurrentTurnValue();
 }
 
 function calculateCurrentTurnValue() {
@@ -609,7 +614,6 @@ function saveManualTurno() {
     const fecha = document.getElementById('f-fecha');
     const horas = parseFloat(document.getElementById('f-horas').value) || 0;
     const jornada = document.getElementById('f-jornada').value;
-    const valorPersonalizado = parseFloat(document.getElementById('f-valor-turno').value);
     const notas = document.getElementById('f-notas').value.trim();
 
     if (!lugar.value.trim() || !fecha.value) { 
@@ -617,8 +621,8 @@ function saveManualTurno() {
         return; 
     }
     
-    // Si el usuario modificó manualmente el valor del turno se respeta, de lo contrario se calcula de forma estricta individualmente
-    let subtotalFinal = !isNaN(valorPersonalizado) ? valorPersonalizado : calculateTurnoSubtotal(jornada, horas);
+    // Cálculo estricto según la jornada y las horas reales multiplicadas por el valor configurado
+    let subtotalFinal = calculateTurnoSubtotal(jornada, horas);
 
     executeSave(lugar.value.trim(), fecha.value, horas, jornada, subtotalFinal, notas);
     lugar.value = ""; 
@@ -662,7 +666,7 @@ function exportExcel() {
     if(db.length === 0) { showToast('No hay datos.', 'warning'); return; }
     let csvContent = "\uFEFFFecha de Servicio;Jornada Laboral;Ubicación / Centro;Horas Realizadas;Subtotal;Notas\n";
     db.forEach(r => {
-        let subtotal = r.subtotal !== undefined ? r.subtotal : calculateTurnoSubtotal(r.jornada, r.horas);
+        let subtotal = calculateTurnoSubtotal(r.jornada, r.horas);
         csvContent += `${r.fecha};${r.jornada};${r.lugar};${r.horas};${subtotal};${r.notas}\n`;
     });
     const link = document.createElement("a");
@@ -673,7 +677,7 @@ function exportExcel() {
 
 /* ===== FUNCIONES DE TARJETA Y WHATSAPP ===== */
 function generateSingleText(r, index = null) {
-    let subtotal = r.subtotal !== undefined ? r.subtotal : calculateTurnoSubtotal(r.jornada, r.horas);
+    let subtotal = calculateTurnoSubtotal(r.jornada, r.horas);
     let text = `👑 *${appName.toUpperCase()}*\n`;
     text += `====================\n`;
     if(index !== null) text += `📋 *REGISTRO Nº ${index + 1}*\n`;
@@ -696,7 +700,7 @@ function generateGroupText() {
     let totalHrs = 0;
     let totalIngresos = 0;
     db.forEach((r, i) => {
-        let subtotal = r.subtotal !== undefined ? r.subtotal : calculateTurnoSubtotal(r.jornada, r.horas);
+        let subtotal = calculateTurnoSubtotal(r.jornada, r.horas);
         text += `*📋 REGISTRO Nº ${i + 1}*\n`;
         text += `📅 *Fecha:* ${r.fecha}\n`;
         text += `📍 *Lugar:* ${r.lugar}\n`;
@@ -807,7 +811,7 @@ function refreshSystem() {
     
     db.forEach(r => {
         horasTotales += r.horas;
-        let subtotal = r.subtotal !== undefined ? r.subtotal : calculateTurnoSubtotal(r.jornada, r.horas);
+        let subtotal = calculateTurnoSubtotal(r.jornada, r.horas);
         ingresosTotales += subtotal;
 
         lista.insertAdjacentHTML("beforeend", `
