@@ -2,7 +2,7 @@
 <html lang="es"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title id="app-meta-title">Luxury Bitácora Élite v9.1</title>
+    <title id="app-meta-title">Luxury Bitácora Élite v9.2</title>
 
     <meta name="theme-color" content="#0a0a0a">
 
@@ -21,7 +21,7 @@
             --success: #2ecc71;
             --warning: #f1c40f;
             --whatsapp-color: #128c7e;
-            --maps-blue: #4285F4;
+            --waze-color: #33ccff;
         }
 
         * {
@@ -188,14 +188,6 @@
             border-color: rgba(212, 175, 55, 0.4);
         }
 
-        .history-item.removing {
-            animation: collapseRow 0.3s forwards ease-in-out;
-        }
-
-        @keyframes collapseRow {
-            to { opacity: 0; transform: translateX(100px); height: 0; padding: 0; margin: 0; border: none; }
-        }
-
         .history-info h4 { margin: 0 0 4px 0; font-size: 1.05rem; color: #fff; }
         .history-info p { margin: 0; font-size: 0.85rem; color: var(--text-muted); }
         .history-info .note { font-size: 0.8rem; color: var(--accent-gold); margin-top: 4px; font-style: italic; }
@@ -216,7 +208,7 @@
             cursor: pointer; font-size: 1.1rem; padding: 5px; transition: color 0.2s, transform 0.1s;
         }
         .btn-action:active { transform: scale(0.9); }
-        .btn-action.map-trigger:hover { color: var(--maps-blue); }
+        .btn-action.map-trigger:hover { color: var(--waze-color); }
         .btn-action.wa-trigger:hover { color: var(--whatsapp-color); }
         .btn-action.delete-trigger:hover { color: var(--danger); }
 
@@ -312,7 +304,7 @@
         .btn-modal.cancel { background: #222; color: var(--text-muted); }
         .btn-modal.wa-action { background: var(--whatsapp-color); color: white; }
 
-        /* BOTTOM NAVBAR (4 ITEMS: Métricas, Registrar, Mapa, Historial) */
+        /* BOTTOM NAVBAR */
         .bottom-nav {
             position: fixed;
             bottom: 0; left: 0; right: 0;
@@ -337,18 +329,16 @@
         .chart-bar { height: 20px; background: #222; border-radius: 10px; overflow: hidden; margin-top: 8px; }
         .chart-progress { height: 100%; background: linear-gradient(90deg, #aa841e, #d4af37); width: 0%; transition: width 0.5s ease; }
     
-html, body { overscroll-behavior-y: contain !important; overscroll-behavior: contain !important; }
-</style>
-    
+        html, body { overscroll-behavior-y: contain !important; overscroll-behavior: contain !important; }
+    </style>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" id="apple-meta-app-title" content="Luxury Bitácora Élite">
     <link rel="apple-touch-icon" href="icons/apple-icon-180x180.png">
-    <meta name="theme-color" content="#0a0a0a">
     <link rel="manifest" href="manifest.json">
     <script src="register-sw.js" defer=""></script>
-            </head>
+</head>
 
 <body>
 
@@ -398,7 +388,7 @@ html, body { overscroll-behavior-y: contain !important; overscroll-behavior: con
         <div class="metrics-grid">
             <div class="metric-card" style="grid-column: span 2;">
                 <span id="st-cash">$0.00</span>
-                <label id="lbl-tarifa-label">Ingresos Estimados ($15k/h)</label>
+                <label id="lbl-tarifa-label">Ingresos Estimados (Diurno/Nocturno)</label>
             </div>
         </div>
 
@@ -472,11 +462,17 @@ html, body { overscroll-behavior-y: contain !important; overscroll-behavior: con
                 <label>Nombre Personalizado de la App</label>
                 <input type="text" id="cfg-nombre-app" placeholder="Ej. Bitácora Personal">
             </div>
-            <div class="form-group">
-                <label>Valor por Hora ($)</label>
-                <input type="number" id="cfg-valor-hora" placeholder="Ej. 15000">
+            <div class="metrics-grid" style="margin-bottom:0;">
+                <div class="form-group">
+                    <label>Valor Hora Diurno ($)</label>
+                    <input type="number" id="cfg-valor-diurno" placeholder="Ej. 15000">
+                </div>
+                <div class="form-group">
+                    <label>Valor Hora Nocturno ($)</label>
+                    <input type="number" id="cfg-valor-nocturno" placeholder="Ej. 20000">
+                </div>
             </div>
-            <button class="btn-main" onclick="saveConfigApp()">💾 Guardar Configuración</button>
+            <button class="btn-main" onclick="saveConfigApp()" style="margin-top: 15px;">💾 Guardar Configuración</button>
         </div>
         <div class="card">
             <label style="color: var(--accent-gold); font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 12px; text-transform: uppercase;">Exportación y Datos</label>
@@ -500,8 +496,9 @@ html, body { overscroll-behavior-y: contain !important; overscroll-behavior: con
 
 <script>
 let db = JSON.parse(localStorage.getItem('luxury_db')) || [];
-let valorHora = parseFloat(localStorage.getItem('luxury_valor_hora')) || 15000;
-let appName = localStorage.getItem('luxury_app_name') || 'Luxury Bitácora Élite v9.0';
+let valorDiurno = parseFloat(localStorage.getItem('luxury_valor_diurno')) || 15000;
+let valorNocturno = parseFloat(localStorage.getItem('luxury_valor_nocturno')) || 20000;
+let appName = localStorage.getItem('luxury_app_name') || 'Luxury Bitácora Élite v9.2';
 let leafletMap;
 let leafletMarkers = [];
 let activeIdToDelete = null;
@@ -550,13 +547,13 @@ function loadMarkers() {
     });
 }
 
-function openNativeGoogleMaps(address, event) {
+function openWazeNavigation(address, event) {
     if (event) event.stopPropagation();
     if (!address) return;
-    showToast("Abriendo Google Maps en tu teléfono...", "success");
+    showToast("Abriendo Waze en tu vehículo...", "success");
     const encodedAddress = encodeURIComponent(address);
-    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
-    window.open(googleMapsUrl, '_blank');
+    const wazeUrl = `https://waze.com/ul?q=${encodedAddress}&navigate=yes`;
+    window.open(wazeUrl, '_blank');
 }
 
 async function searchMap() {
@@ -625,6 +622,8 @@ function exportExcel() {
 
 /* ===== FUNCIONES DE TARJETA FLOTANTE Y WHATSAPP ===== */
 function generateSingleText(r, index = null) {
+    let tarifaRate = (r.jornada === 'Nocturno') ? valorNocturno : valorDiurno;
+    let subtotal = r.horas * tarifaRate;
     let text = `👑 *${appName.toUpperCase()}*\n`;
     text += `====================\n`;
     if(index !== null) text += `📋 *REGISTRO Nº ${index + 1}*\n`;
@@ -632,6 +631,7 @@ function generateSingleText(r, index = null) {
     text += `📍 *Lugar:* ${r.lugar}\n`;
     text += `💼 *Jornada:* ${r.jornada}\n`;
     text += `⏱️ *Horas:* ${r.horas} Hrs\n`;
+    text += `💰 *Subtotal:* $${subtotal.toLocaleString()}\n`;
     if (r.notas) {
         text += `💬 *Notas:* ${r.notas}\n`;
     }
@@ -644,25 +644,29 @@ function generateGroupText() {
     let text = `👑 *${appName.toUpperCase()}*\n`;
     text += `====================================\n\n`;
     let totalHrs = 0;
+    let totalIngresos = 0;
     db.forEach((r, i) => {
+        let tarifaRate = (r.jornada === 'Nocturno') ? valorNocturno : valorDiurno;
+        let subtotal = r.horas * tarifaRate;
         text += `*📋 REGISTRO Nº ${i + 1}*\n`;
         text += `📅 *Fecha:* ${r.fecha}\n`;
         text += `📍 *Lugar:* ${r.lugar}\n`;
         text += `💼 *Jornada:* ${r.jornada}\n`;
         text += `⏱️ *Horas:* ${r.horas} Hrs\n`;
+        text += `💰 *Subtotal:* $${subtotal.toLocaleString()}\n`;
         if (r.notas) {
             text += `💬 *Notas:* ${r.notas}\n`;
         }
         text += `------------------------------------\n\n`;
         totalHrs += r.horas;
+        totalIngresos += subtotal;
     });
-    let totalIngresos = totalHrs * valorHora;
     let porcentaje = Math.min((totalHrs / 160) * 100, 100).toFixed(1);
     
     text += `📊 *RESUMEN GLOBAL:*\n`;
     text += `• Turnos Totales: ${db.length}\n`;
     text += `• Horas Totales: ${totalHrs} Hrs\n`;
-    text += `• Ingresos Estimados: $${totalIngresos.toLocaleString()}\n`;
+    text += `• Ingresos Totales: $${totalIngresos.toLocaleString()}\n`;
     text += `• Meta Mensual: ${porcentaje}% completado\n`;
     text += `✅ *Notificación:* Todos los turnos reportados`;
     return text;
@@ -712,22 +716,25 @@ function clearAllData() {
 
 function saveConfigApp() {
     const inputName = document.getElementById('cfg-nombre-app').value.trim();
-    const inputVal = document.getElementById('cfg-valor-hora').value;
+    const inputDiurno = document.getElementById('cfg-valor-diurno').value;
+    const inputNocturno = document.getElementById('cfg-valor-nocturno').value;
 
     if (!inputName) {
         showToast("Ingresa un nombre válido para la app", "warning");
         return;
     }
-    if (!inputVal || isNaN(inputVal) || parseFloat(inputVal) < 0) {
-        showToast("Ingresa un valor de hora válido", "warning");
+    if (!inputDiurno || isNaN(inputDiurno) || parseFloat(inputDiurno) < 0 || !inputNocturno || isNaN(inputNocturno) || parseFloat(inputNocturno) < 0) {
+        showToast("Ingresa valores de hora válidos", "warning");
         return;
     }
 
     appName = inputName;
-    valorHora = parseFloat(inputVal);
+    valorDiurno = parseFloat(inputDiurno);
+    valorNocturno = parseFloat(inputNocturno);
 
     localStorage.setItem('luxury_app_name', appName);
-    localStorage.setItem('luxury_valor_hora', valorHora);
+    localStorage.setItem('luxury_valor_diurno', valorDiurno);
+    localStorage.setItem('luxury_valor_nocturno', valorNocturno);
 
     showToast("Configuración guardada con éxito");
     refreshSystem();
@@ -742,11 +749,15 @@ function refreshSystem() {
     const lista = document.getElementById('lista');
     lista.innerHTML = "";
     let horasTotales = 0;
+    let ingresosTotales = 0;
     db.sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
     if(db.length === 0) { lista.innerHTML = `<p style="text-align:center; color:var(--text-muted); margin-top:40px;">No hay turnos.</p>`; }
     
     db.forEach(r => {
         horasTotales += r.horas;
+        let tarifaRate = (r.jornada === 'Nocturno') ? valorNocturno : valorDiurno;
+        ingresosTotales += (r.horas * tarifaRate);
+
         lista.insertAdjacentHTML("beforeend", `
             <div class="history-item" id="row-${r.id}" onclick="previewSingleWA(${r.id})" title="Ver Tarjeta Flotante">
                 <div class="history-info">
@@ -757,7 +768,7 @@ function refreshSystem() {
                 <div class="history-actions">
                     <div class="history-badge">${r.horas} Hrs</div>
                     <button class="btn-action wa-trigger" onclick="previewSingleWA(${r.id}); event.stopPropagation();" title="Enviar Tarjeta Individual">📲</button>
-                    <button class="btn-action map-trigger" onclick="openNativeGoogleMaps('${r.lugar.replace(/'/g, "\\'")}', event)" title="Abrir en Google Maps">🗺️</button>
+                    <button class="btn-action map-trigger" onclick="openWazeNavigation('${r.lugar.replace(/'/g, "\\'")}', event)" title="Navegar con Waze">🚗</button>
                     <button class="btn-action delete-trigger" onclick="openDeleteModal(${r.id}, event)" title="Eliminar">🗑️</button>
                 </div>
             </div>
@@ -765,8 +776,8 @@ function refreshSystem() {
     });
     document.getElementById('st-t').innerText = db.length;
     document.getElementById('st-h').innerText = horasTotales;
-    document.getElementById('st-cash').innerText = `$${(horasTotales * valorHora).toLocaleString()}`;
-    document.getElementById('lbl-tarifa-label').innerText = `Ingresos Estimados ($${valorHora.toLocaleString()}/h)`;
+    document.getElementById('st-cash').innerText = `$${ingresosTotales.toLocaleString()}`;
+    document.getElementById('lbl-tarifa-label').innerText = `Ingresos (D: $${valorDiurno.toLocaleString()} / N: $${valorNocturno.toLocaleString()})`;
     
     let porcentaje = Math.min((horasTotales / 160) * 100, 100);
     document.getElementById('metric-progress').style.width = `${porcentaje}%`;
@@ -775,53 +786,52 @@ function refreshSystem() {
 
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('f-fecha').value = new Date().toISOString().split('T')[0];
-    document.getElementById('cfg-valor-hora').value = valorHora;
+    document.getElementById('cfg-valor-diurno').value = valorDiurno;
+    document.getElementById('cfg-valor-nocturno').value = valorNocturno;
     document.getElementById('cfg-nombre-app').value = appName;
     refreshSystem();
 });
 </script>
 
-
-    <div id="pwa-install-banner" style="position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(150px); width: 90%; max-width: 400px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 14px 18px; border-radius: 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); z-index: 99999; transition: transform 0.4s ease; font-family: sans-serif;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <img src="icons/icon-128x128.png" style="width: 40px; height: 40px; border-radius: 8px; object-fit: contain; background-color: #222222;">
-            <div style="display: flex; flex-direction: column;">
-                <span id="pwa-banner-title" style="color: #ffffff; font-size: 14px; font-weight: 600;">Luxury Bitácora Élite</span>
-                <span style="color: #94a3b8; font-size: 11px;">Instalar en pantalla de inicio</span>
-            </div>
-        </div>
-        <div style="display: flex; gap: 8px;">
-            <button id="pwa-cancel-btn" style="background: transparent; border: none; color: #64748b; font-size: 12px; cursor: pointer; padding: 6px;">Later</button>
-            <button id="pwa-accept-btn" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; color: #ffffff; font-size: 12px; font-weight: 600; cursor: pointer; padding: 8px 14px; border-radius: 8px;">Instalar</button>
+<div id="pwa-install-banner" style="position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(150px); width: 90%; max-width: 400px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 14px 18px; border-radius: 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); z-index: 99999; transition: transform 0.4s ease; font-family: sans-serif;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <img src="icons/icon-128x128.png" style="width: 40px; height: 40px; border-radius: 8px; object-fit: contain; background-color: #222222;">
+        <div style="display: flex; flex-direction: column;">
+            <span id="pwa-banner-title" style="color: #ffffff; font-size: 14px; font-weight: 600;">Luxury Bitácora Élite</span>
+            <span style="color: #94a3b8; font-size: 11px;">Instalar en pantalla de inicio</span>
         </div>
     </div>
-    <script>
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault(); window.deferredPrompt = e;
-            const b = document.getElementById('pwa-install-banner');
-            if(b) b.style.transform = 'translateX(-50%) translateY(0)';
-        });
-        document.getElementById('pwa-cancel-btn')?.addEventListener('click', () => {
+    <div style="display: flex; gap: 8px;">
+        <button id="pwa-cancel-btn" style="background: transparent; border: none; color: #64748b; font-size: 12px; cursor: pointer; padding: 6px;">Later</button>
+        <button id="pwa-accept-btn" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; color: #ffffff; font-size: 12px; font-weight: 600; cursor: pointer; padding: 8px 14px; border-radius: 8px;">Instalar</button>
+    </div>
+</div>
+<script>
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault(); window.deferredPrompt = e;
+        const b = document.getElementById('pwa-install-banner');
+        if(b) b.style.transform = 'translateX(-50%) translateY(0)';
+    });
+    document.getElementById('pwa-cancel-btn')?.addEventListener('click', () => {
+        document.getElementById('pwa-install-banner').style.transform = 'translateX(-50%) translateY(150px)';
+    });
+    document.getElementById('pwa-accept-btn')?.addEventListener('click', async () => {
+        if (window.deferredPrompt) {
+            window.deferredPrompt.prompt();
+            window.deferredPrompt = null;
             document.getElementById('pwa-install-banner').style.transform = 'translateX(-50%) translateY(150px)';
-        });
-        document.getElementById('pwa-accept-btn')?.addEventListener('click', async () => {
-            if (window.deferredPrompt) {
-                window.deferredPrompt.prompt();
-                window.deferredPrompt = null;
-                document.getElementById('pwa-install-banner').style.transform = 'translateX(-50%) translateY(150px)';
-            }
-        });
-    </script>
-    <script>
-        window.addEventListener('touchstart', function(e) {
-            if (window.scrollY === 0) { this.allowUp = false; } else { this.allowUp = true; }
-        }, { passive: false });
-    </script>
-    <script>
-        window.addEventListener('touchmove', function(e) {
-            if (window.scrollY === 0 && e.touches[0].clientY > (this.initY || 0)) {
-                if (document.body.scrollTop === 0) { e.preventDefault(); }
-            }
-        }, { passive: false });
-    </script>
-            </body></html>
+        }
+    });
+</script>
+<script>
+    window.addEventListener('touchstart', function(e) {
+        if (window.scrollY === 0) { this.allowUp = false; } else { this.allowUp = true; }
+    }, { passive: false });
+    window.addEventListener('touchmove', function(e) {
+        if (window.scrollY === 0 && e.touches[0].clientY > (this.initY || 0)) {
+            if (document.body.scrollTop === 0) { e.preventDefault(); }
+        }
+    }, { passive: false });
+</script>
+
+</body></html>
