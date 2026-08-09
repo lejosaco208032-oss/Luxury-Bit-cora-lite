@@ -2,7 +2,7 @@
 <html lang="es"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Luxury Bitácora Élite v8.7</title>
+    <title id="app-meta-title">Luxury Bitácora Élite v8.8</title>
 
     <meta name="theme-color" content="#0a0a0a">
 
@@ -317,7 +317,7 @@ html, body { overscroll-behavior-y: contain !important; overscroll-behavior: con
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Luxury Bitácora Élite v8.7">
+    <meta name="apple-mobile-web-app-title" id="apple-meta-app-title" content="Luxury Bitácora Élite">
     <link rel="apple-touch-icon" href="icons/apple-icon-180x180.png">
     <meta name="theme-color" content="#0a0a0a">
     <link rel="manifest" href="manifest.json">
@@ -342,7 +342,7 @@ html, body { overscroll-behavior-y: contain !important; overscroll-behavior: con
 <div class="app-container">
 
     <div id="v-metrics" class="view active">
-        <h1>Dashboard Élite</h1>
+        <h1 id="app-dashboard-title">Dashboard Élite</h1>
         <div class="metrics-grid">
             <div class="metric-card">
                 <span id="st-t">0</span>
@@ -356,7 +356,7 @@ html, body { overscroll-behavior-y: contain !important; overscroll-behavior: con
         <div class="metrics-grid">
             <div class="metric-card" style="grid-column: span 2;">
                 <span id="st-cash">$0.00</span>
-                <label>Ingresos Estimados ($15k/h)</label>
+                <label id="lbl-tarifa-label">Ingresos Estimados ($15k/h)</label>
             </div>
         </div>
 
@@ -369,9 +369,10 @@ html, body { overscroll-behavior-y: contain !important; overscroll-behavior: con
         </div>
 
         <div class="card">
-            <label style="color: var(--accent-gold); font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 12px; text-transform: uppercase;">Exportación de Datos</label>
+            <label style="color: var(--accent-gold); font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 12px; text-transform: uppercase;">Exportación y Ajustes</label>
             <button class="btn-main" onclick="exportExcel()">📊 Descargar Excel (CSV ;)</button>
             <button class="btn-main" style="background: var(--whatsapp-color); color: white; margin-bottom: 5px;" onclick="wa()">📲 Compartir vía WhatsApp</button>
+            <button class="btn-main" style="background: #222; color: var(--accent-gold); border: 1px solid var(--accent-gold); margin-top: 5px;" onclick="switchView('v-config', document.querySelectorAll('.nav-item')[4])">⚙️ Ajustes y Configuración</button>
             <button class="btn-main" style="background: #222; color: var(--danger); margin-top: 10px; font-size: 0.85rem;" onclick="clearAllData()">🗑️ Limpiar Base de Datos</button>
         </div>
     </div>
@@ -424,6 +425,21 @@ html, body { overscroll-behavior-y: contain !important; overscroll-behavior: con
         <div id="lista"></div>
     </div>
 
+    <div id="v-config" class="view">
+        <h1>Ajustes de la Aplicación</h1>
+        <div class="card">
+            <div class="form-group">
+                <label>Nombre Personalizado de la App</label>
+                <input type="text" id="cfg-nombre-app" placeholder="Ej. Bitácora Personal">
+            </div>
+            <div class="form-group">
+                <label>Valor por Hora ($)</label>
+                <input type="number" id="cfg-valor-hora" placeholder="Ej. 15000">
+            </div>
+            <button class="btn-main" onclick="saveConfigApp()">💾 Guardar Configuración</button>
+        </div>
+    </div>
+
 </div>
 
 <nav class="bottom-nav">
@@ -431,16 +447,18 @@ html, body { overscroll-behavior-y: contain !important; overscroll-behavior: con
     <button class="nav-item" onclick="switchView('v-register', this)"><span class="icon">📝</span><span>Registrar</span></button>
     <button class="nav-item" onclick="switchView('v-map', this)"><span class="icon">🗺️</span><span>Mapa</span></button>
     <button class="nav-item" onclick="switchView('v-list', this)"><span class="icon">📋</span><span>Historial</span></button>
+    <button class="nav-item" onclick="switchView('v-config', this)"><span class="icon">⚙️</span><span>Ajustes</span></button>
 </nav>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
 <script>
 let db = JSON.parse(localStorage.getItem('luxury_db')) || [];
+let valorHora = parseFloat(localStorage.getItem('luxury_valor_hora')) || 15000;
+let appName = localStorage.getItem('luxury_app_name') || 'Luxury Bitácora Élite v8.8';
 let leafletMap;
 let leafletMarkers = [];
 let activeIdToDelete = null;
-const valorHora = 15000;
 
 function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
@@ -480,22 +498,17 @@ function loadMarkers() {
             let latOffset = (idx * 0.005) * (idx % 2 === 0 ? 1 : -1);
             let lngOffset = (idx * 0.005) * (idx % 2 === 0 ? -1 : 1);
             let marker = L.marker([10.9639 + latOffset, -74.7964 + lngOffset]).addTo(leafletMap)
-                          .bindPopup(`<b>${r.lugar}</b><br>${r.jornada}`);
+                      .bindPopup(`<b>${r.lugar}</b><br>${r.jornada}`);
             leafletMarkers.push(marker);
         }
     });
 }
 
-// INTERACCIÓN DIRECTA CON EL GOOGLE MAPS DEL TELÉFONO
 function openNativeGoogleMaps(address) {
     if (!address) return;
     showToast("Abriendo Google Maps en tu teléfono...", "success");
-    
-    // Intentar abrir mediante la URL universal de navegación (Funciona nativamente en Android e iOS)
     const encodedAddress = encodeURIComponent(address);
     const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
-    
-    // Abrir de inmediato la aplicación del sistema operativo
     window.open(googleMapsUrl, '_blank');
 }
 
@@ -555,19 +568,31 @@ function exportExcel() {
     db.forEach(r => { csvContent += `${r.fecha};${r.jornada};${r.lugar};${r.horas};${r.notas}\n`; });
     const link = document.createElement("a");
     link.setAttribute("href", URL.createObjectURL(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })));
-    link.setAttribute("download", `Bitacora_v8.7.csv`);
+    link.setAttribute("download", `${appName.replace(/\s+/g, '_')}.csv`);
     document.body.appendChild(link); link.click(); document.body.removeChild(link);
 }
 
 function wa() {
     if(db.length === 0) { showToast('No hay datos.', 'warning'); return; }
-    let texto = `👑 *LUXURY BITÁCORA ÉLITE v8.7*\n====================================\n\n`;
+    let texto = `👑 *${appName.toUpperCase()}*\n====================================\n\n`;
     let totalHrs = 0;
     db.forEach((r, i) => {
-        texto += `*📋 REGISTRO Nº ${i + 1}*\n📅 *Fecha:* ${r.fecha}\n📍 *Lugar:* ${r.lugar}\n⏱️ *Horas:* ${r.horas} Hrs\n------------------------------------\n\n`;
+        texto += `*📋 REGISTRO Nº ${i + 1}*\n📅 *Fecha:* ${r.fecha}\n📍 *Lugar:* ${r.lugar}\n💼 *Jornada:* ${r.jornada}\n⏱️ *Horas:* ${r.horas} Hrs\n`;
+        if (r.notas) {
+            texto += `💬 *Notas:* ${r.notas}\n`;
+        }
+        texto += `------------------------------------\n\n`;
         totalHrs += r.horas;
     });
-    texto += `📊 *TOTAL:* ${totalHrs} Hrs ($${(totalHrs * valorHora).toLocaleString()})`;
+    let totalIngresos = totalHrs * valorHora;
+    let porcentaje = Math.min((totalHrs / 160) * 100, 100).toFixed(1);
+    
+    texto += `📊 *RESUMEN GLOBAL:*\n`;
+    texto += `• Turnos Totales: ${db.length}\n`;
+    texto += `• Horas Totales: ${totalHrs} Hrs\n`;
+    texto += `• Ingresos Estimados: $${totalIngresos.toLocaleString()}\n`;
+    texto += `• Meta Mensual: ${porcentaje}% completado`;
+
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
 }
 
@@ -575,7 +600,36 @@ function clearAllData() {
     if(confirm('¿Borrar toda la base de datos?')) { db = []; localStorage.removeItem('luxury_db'); refreshSystem(); }
 }
 
+function saveConfigApp() {
+    const inputName = document.getElementById('cfg-nombre-app').value.trim();
+    const inputVal = document.getElementById('cfg-valor-hora').value;
+
+    if (!inputName) {
+        showToast("Ingresa un nombre válido para la app", "warning");
+        return;
+    }
+    if (!inputVal || isNaN(inputVal) || parseFloat(inputVal) < 0) {
+        showToast("Ingresa un valor de hora válido", "warning");
+        return;
+    }
+
+    appName = inputName;
+    valorHora = parseFloat(inputVal);
+
+    localStorage.setItem('luxury_app_name', appName);
+    localStorage.setItem('luxury_valor_hora', valorHora);
+
+    showToast("Configuración guardada con éxito");
+    refreshSystem();
+    switchView('v-metrics', document.querySelectorAll('.nav-item')[0]);
+}
+
 function refreshSystem() {
+    // Actualizar nombre en metadatos y encabezados de la app
+    document.getElementById('app-meta-title').innerText = appName;
+    document.getElementById('apple-meta-app-title').setAttribute('content', appName);
+    document.getElementById('app-dashboard-title').innerText = appName;
+
     const lista = document.getElementById('lista');
     lista.innerHTML = "";
     let horasTotales = 0;
@@ -602,6 +656,8 @@ function refreshSystem() {
     document.getElementById('st-t').innerText = db.length;
     document.getElementById('st-h').innerText = horasTotales;
     document.getElementById('st-cash').innerText = `$${(horasTotales * valorHora).toLocaleString()}`;
+    document.getElementById('lbl-tarifa-label').innerText = `Ingresos Estimados ($${valorHora.toLocaleString()}/h)`;
+    
     let porcentaje = Math.min((horasTotales / 160) * 100, 100);
     document.getElementById('metric-progress').style.width = `${porcentaje}%`;
     document.getElementById('progress-desc').innerText = `${porcentaje.toFixed(1)}% de tu meta mensual.`;
@@ -609,6 +665,8 @@ function refreshSystem() {
 
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('f-fecha').value = new Date().toISOString().split('T')[0];
+    document.getElementById('cfg-valor-hora').value = valorHora;
+    document.getElementById('cfg-nombre-app').value = appName;
     refreshSystem();
 });
 </script>
@@ -618,7 +676,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <div style="display: flex; align-items: center; gap: 12px;">
             <img src="icons/icon-128x128.png" style="width: 40px; height: 40px; border-radius: 8px; object-fit: contain; background-color: #222222;">
             <div style="display: flex; flex-direction: column;">
-                <span style="color: #ffffff; font-size: 14px; font-weight: 600;">Luxury Bitácora Élite v8.7</span>
+                <span id="pwa-banner-title" style="color: #ffffff; font-size: 14px; font-weight: 600;">Luxury Bitácora Élite</span>
                 <span style="color: #94a3b8; font-size: 11px;">Instalar en pantalla de inicio</span>
             </div>
         </div>
@@ -648,6 +706,8 @@ document.addEventListener("DOMContentLoaded", () => {
         window.addEventListener('touchstart', function(e) {
             if (window.scrollY === 0) { this.allowUp = false; } else { this.allowUp = true; }
         }, { passive: false });
+    </script>
+    <script>
         window.addEventListener('touchmove', function(e) {
             if (window.scrollY === 0 && e.touches[0].clientY > (this.initY || 0)) {
                 if (document.body.scrollTop === 0) { e.preventDefault(); }
