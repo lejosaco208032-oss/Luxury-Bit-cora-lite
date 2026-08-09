@@ -2,7 +2,7 @@
 <html lang="es"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title id="app-meta-title">Luxury Bitácora Élite v9.4</title>
+    <title id="app-meta-title">Luxury Bitácora Élite v9.5</title>
 
     <meta name="theme-color" content="#0a0a0a">
 
@@ -388,7 +388,7 @@
         <div class="metrics-grid">
             <div class="metric-card" style="grid-column: span 2;">
                 <span id="st-cash">$0.00</span>
-                <label id="lbl-tarifa-label">Ingresos Totales (Calculados por Turno)</label>
+                <label id="lbl-tarifa-label">Ingresos Totales (Basados en Turnos Registrados)</label>
             </div>
         </div>
 
@@ -419,15 +419,19 @@
             </div>
             <div class="form-group">
                 <label>Horas Laboradas</label>
-                <input type="number" id="f-horas" value="8" min="1" max="24">
+                <input type="number" id="f-horas" value="8" min="1" max="24" oninput="calculateCurrentTurnValue()">
             </div>
             <div class="form-group">
                 <label>Jornada</label>
-                <select id="f-jornada">
+                <select id="f-jornada" onchange="calculateCurrentTurnValue()">
                     <option value="Diurno">Diurno ☀️</option>
                     <option value="Nocturno">Nocturno 🌙</option>
                     <option value="Mixto">Mixto 🔄</option>
                 </select>
+            </div>
+            <div class="form-group">
+                <label>Valor / Subtotal Calculado para este Turno ($)</label>
+                <input type="number" id="f-valor-turno" placeholder="Se calcula automáticamente según jornada y horas">
             </div>
             <div class="form-group">
                 <label>Notas / Observaciones</label>
@@ -498,7 +502,7 @@
 let db = JSON.parse(localStorage.getItem('luxury_db')) || [];
 let valorDiurno = parseFloat(localStorage.getItem('luxury_valor_diurno')) || 15000;
 let valorNocturno = parseFloat(localStorage.getItem('luxury_valor_nocturno')) || 20000;
-let appName = localStorage.getItem('luxury_app_name') || 'Luxury Bitácora Élite v9.3';
+let appName = localStorage.getItem('luxury_app_name') || 'Luxury Bitácora Élite v9.5';
 let leafletMap;
 let leafletMarkers = [];
 let activeIdToDelete = null;
@@ -515,11 +519,33 @@ function showToast(message, type = 'success') {
 
 function clearError(divId) { document.getElementById(divId).classList.remove('error'); }
 
+/* CÁLCULO INDIVIDUAL ESTRICTO SEGÚN LA JORNADA Y LAS HORAS DEL TURNO */
+function calculateTurnoSubtotal(jornada, horas) {
+    let hrs = parseFloat(horas) || 0;
+    let rate = valorDiurno;
+    if (jornada === 'Nocturno') {
+        rate = valorNocturno;
+    } else if (jornada === 'Mixto') {
+        rate = (valorDiurno + valorNocturno) / 2;
+    }
+    return hrs * rate;
+}
+
+function calculateCurrentTurnValue() {
+    const jornada = document.getElementById('f-jornada').value;
+    const horas = document.getElementById('f-horas').value;
+    const inputValor = document.getElementById('f-valor-turno');
+    inputValor.value = calculateTurnoSubtotal(jornada, horas);
+}
+
 function switchView(viewId, element) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
     document.getElementById(viewId).classList.add('active');
     element.classList.add('active');
+    if(viewId === 'v-register') {
+        calculateCurrentTurnValue();
+    }
     if(viewId === 'v-map') {
         setTimeout(() => {
             if (!leafletMap) {
@@ -567,7 +593,11 @@ async function searchMap() {
             const lon = parseFloat(data[0].lon);
             leafletMap.setView([lat, lon], 14);
             L.marker([lat, lon]).addTo(leafletMap).bindPopup(`<b>${address}</b>`).openPopup();
-            executeSave(address, new Date().toISOString().split('T')[0], 8, "Diurno", "Añadido desde mapa");
+            
+            let defaultHrs = 8;
+            let jornadaDefault = "Diurno";
+            let subtotalCalculado = calculateTurnoSubtotal(jornadaDefault, defaultHrs);
+            executeSave(address, new Date().toISOString().split('T')[0], defaultHrs, jornadaDefault, subtotalCalculado, "Añadido desde mapa");
             document.getElementById("mapSearch").value = "";
             showToast("Ubicación guardada.");
         } else { showToast("Lugar no encontrado.", "warning"); }
@@ -577,18 +607,36 @@ async function searchMap() {
 function saveManualTurno() {
     const lugar = document.getElementById('f-lugar');
     const fecha = document.getElementById('f-fecha');
-    const horas = document.getElementById('f-horas').value;
+    const horas = parseFloat(document.getElementById('f-horas').value) || 0;
     const jornada = document.getElementById('f-jornada').value;
+    const valorPersonalizado = parseFloat(document.getElementById('f-valor-turno').value);
     const notas = document.getElementById('f-notas').value.trim();
-    if (!lugar.value.trim() || !fecha.value) { showToast("Rellena los campos obligatorios", "warning"); return; }
-    executeSave(lugar.value.trim(), fecha.value, horas, jornada, notas);
-    lugar.value = ""; document.getElementById('f-notas').value = "";
+
+    if (!lugar.value.trim() || !fecha.value) { 
+        showToast("Rellena los campos obligatorios", "warning"); 
+        return; 
+    }
+    
+    // Si el usuario modificó manualmente el valor del turno se respeta, de lo contrario se calcula de forma estricta individualmente
+    let subtotalFinal = !isNaN(valorPersonalizado) ? valorPersonalizado : calculateTurnoSubtotal(jornada, horas);
+
+    executeSave(lugar.value.trim(), fecha.value, horas, jornada, subtotalFinal, notas);
+    lugar.value = ""; 
+    document.getElementById('f-notas').value = "";
     showToast("Turno guardado.");
     switchView('v-list', document.querySelectorAll('.nav-item')[3]);
 }
 
-function executeSave(lugar, fecha, horas, jornada, notas) {
-    db.push({ id: Date.now(), fecha, jornada, lugar, horas: parseFloat(horas), notas: notas || "" });
+function executeSave(lugar, fecha, horas, jornada, subtotalTurno, notas) {
+    db.push({ 
+        id: Date.now(), 
+        fecha, 
+        jornada, 
+        lugar, 
+        horas: parseFloat(horas), 
+        subtotal: parseFloat(subtotalTurno), 
+        notas: notas || "" 
+    });
     localStorage.setItem("luxury_db", JSON.stringify(db));
     refreshSystem();
 }
@@ -614,8 +662,7 @@ function exportExcel() {
     if(db.length === 0) { showToast('No hay datos.', 'warning'); return; }
     let csvContent = "\uFEFFFecha de Servicio;Jornada Laboral;Ubicación / Centro;Horas Realizadas;Subtotal;Notas\n";
     db.forEach(r => {
-        let tarifaRate = (r.jornada === 'Nocturno') ? valorNocturno : valorDiurno;
-        let subtotal = r.horas * tarifaRate;
+        let subtotal = r.subtotal !== undefined ? r.subtotal : calculateTurnoSubtotal(r.jornada, r.horas);
         csvContent += `${r.fecha};${r.jornada};${r.lugar};${r.horas};${subtotal};${r.notas}\n`;
     });
     const link = document.createElement("a");
@@ -624,19 +671,9 @@ function exportExcel() {
     document.body.appendChild(link); link.click(); document.body.removeChild(link);
 }
 
-/* ===== FUNCIONES DE CÁLCULO INDIVIDUAL Y WHATSAPP ===== */
-function calculateTurnoSubtotal(jornada, horas) {
-    let rate = valorDiurno;
-    if (jornada === 'Nocturno') {
-        rate = valorNocturno;
-    } else if (jornada === 'Mixto') {
-        rate = (valorDiurno + valorNocturno) / 2;
-    }
-    return horas * rate;
-}
-
+/* ===== FUNCIONES DE TARJETA Y WHATSAPP ===== */
 function generateSingleText(r, index = null) {
-    let subtotal = calculateTurnoSubtotal(r.jornada, r.horas);
+    let subtotal = r.subtotal !== undefined ? r.subtotal : calculateTurnoSubtotal(r.jornada, r.horas);
     let text = `👑 *${appName.toUpperCase()}*\n`;
     text += `====================\n`;
     if(index !== null) text += `📋 *REGISTRO Nº ${index + 1}*\n`;
@@ -659,7 +696,7 @@ function generateGroupText() {
     let totalHrs = 0;
     let totalIngresos = 0;
     db.forEach((r, i) => {
-        let subtotal = calculateTurnoSubtotal(r.jornada, r.horas);
+        let subtotal = r.subtotal !== undefined ? r.subtotal : calculateTurnoSubtotal(r.jornada, r.horas);
         text += `*📋 REGISTRO Nº ${i + 1}*\n`;
         text += `📅 *Fecha:* ${r.fecha}\n`;
         text += `📍 *Lugar:* ${r.lugar}\n`;
@@ -703,7 +740,7 @@ function previewSingleWA(id) {
 }
 
 function previewGroupWA() {
-    if (db.length === 0) { showToast('No hay datos para compartir.', 'warning'); return; }
+    if (db.length === 0) { showToast('No hay turnos registrados para compartir.', 'warning'); return; }
     const textContent = generateGroupText();
     
     document.getElementById('floating-modal-title').innerText = `Tarjeta Grupal Completa (${db.length} Turnos)`;
@@ -763,11 +800,14 @@ function refreshSystem() {
     let horasTotales = 0;
     let ingresosTotales = 0;
     db.sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
-    if(db.length === 0) { lista.innerHTML = `<p style="text-align:center; color:var(--text-muted); margin-top:40px;">No hay turnos.</p>`; }
+    
+    if(db.length === 0) { 
+        lista.innerHTML = `<p style="text-align:center; color:var(--text-muted); margin-top:40px;">No hay turnos registrados.</p>`; 
+    }
     
     db.forEach(r => {
         horasTotales += r.horas;
-        let subtotal = calculateTurnoSubtotal(r.jornada, r.horas);
+        let subtotal = r.subtotal !== undefined ? r.subtotal : calculateTurnoSubtotal(r.jornada, r.horas);
         ingresosTotales += subtotal;
 
         lista.insertAdjacentHTML("beforeend", `
@@ -786,10 +826,11 @@ function refreshSystem() {
             </div>
         `);
     });
+    
     document.getElementById('st-t').innerText = db.length;
     document.getElementById('st-h').innerText = horasTotales;
     document.getElementById('st-cash').innerText = `$${ingresosTotales.toLocaleString()}`;
-    document.getElementById('lbl-tarifa-label').innerText = `Ingresos Totales (D: $${valorDiurno.toLocaleString()} / N: $${valorNocturno.toLocaleString()})`;
+    document.getElementById('lbl-tarifa-label').innerText = `Ingresos Totales (Suma de Turnos Registrados)`;
     
     let porcentaje = Math.min((horasTotales / 160) * 100, 100);
     document.getElementById('metric-progress').style.width = `${porcentaje}%`;
@@ -801,6 +842,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('cfg-valor-diurno').value = valorDiurno;
     document.getElementById('cfg-valor-nocturno').value = valorNocturno;
     document.getElementById('cfg-nombre-app').value = appName;
+    calculateCurrentTurnValue();
     refreshSystem();
 });
 </script>
