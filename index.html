@@ -2,7 +2,7 @@
 <html lang="es"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title id="app-meta-title">Luxury Bitácora Élite v8.9</title>
+    <title id="app-meta-title">Luxury Bitácora Élite v9.0</title>
 
     <meta name="theme-color" content="#0a0a0a">
 
@@ -180,7 +180,12 @@
             border-radius: 14px;
             margin-bottom: 12px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            transition: transform 0.2s, opacity 0.3s;
+            transition: transform 0.2s, opacity 0.3s, border-color 0.2s;
+            cursor: pointer;
+        }
+
+        .history-item:hover {
+            border-color: rgba(212, 175, 55, 0.4);
         }
 
         .history-item.removing {
@@ -213,7 +218,6 @@
         .btn-action:active { transform: scale(0.9); }
         .btn-action.map-trigger:hover { color: var(--maps-blue); }
         .btn-action.wa-trigger:hover { color: var(--whatsapp-color); }
-        .btn-action.preview-trigger:hover { color: var(--accent-gold); }
         .btn-action.delete-trigger:hover { color: var(--danger); }
 
         /* ===== TOAST NOTIFICATIONS ===== */
@@ -308,7 +312,7 @@
         .btn-modal.cancel { background: #222; color: var(--text-muted); }
         .btn-modal.wa-action { background: var(--whatsapp-color); color: white; }
 
-        /* BOTTOM NAVBAR */
+        /* BOTTOM NAVBAR (4 ITEMS: Métricas, Registrar, Mapa, Historial) */
         .bottom-nav {
             position: fixed;
             bottom: 0; left: 0; right: 0;
@@ -324,7 +328,7 @@
         .nav-item {
             background: none; border: none; color: var(--text-muted);
             display: flex; flex-direction: column; align-items: center;
-            font-size: 0.75rem; cursor: pointer; width: 20%; transition: color 0.3s;
+            font-size: 0.75rem; cursor: pointer; width: 25%; transition: color 0.3s;
         }
 
         .nav-item span.icon { font-size: 1.4rem; margin-bottom: 4px; }
@@ -366,7 +370,7 @@ html, body { overscroll-behavior-y: contain !important; overscroll-behavior: con
 <div id="floating-modal" class="modal-overlay">
     <div class="modal-content">
         <h3 id="floating-modal-title" style="color:var(--accent-gold); margin-bottom:5px; font-size:1.1rem;">Tarjeta Flotante</h3>
-        <p style="color:var(--text-muted); font-size:0.75rem;">Vista previa lista para enviar a WhatsApp</p>
+        <p style="color:var(--text-muted); font-size:0.75rem;">Vista previa de tarjeta lista para enviar</p>
         
         <div id="floating-card-text" class="floating-card-body"></div>
 
@@ -407,11 +411,8 @@ html, body { overscroll-behavior-y: contain !important; overscroll-behavior: con
         </div>
 
         <div class="card">
-            <label style="color: var(--accent-gold); font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 12px; text-transform: uppercase;">Exportación y Ajustes</label>
-            <button class="btn-main" onclick="exportExcel()">📊 Descargar Excel (CSV ;)</button>
-            <button class="btn-main" style="background: var(--whatsapp-color); color: white; margin-bottom: 5px;" onclick="previewGroupWA()">📲 Ver Tarjeta Grupal y Enviar</button>
-            <button class="btn-main" style="background: #222; color: var(--accent-gold); border: 1px solid var(--accent-gold); margin-top: 5px;" onclick="switchView('v-config', document.querySelectorAll('.nav-item')[4])">⚙️ Ajustes y Configuración</button>
-            <button class="btn-main" style="background: #222; color: var(--danger); margin-top: 10px; font-size: 0.85rem;" onclick="clearAllData()">🗑️ Limpiar Base de Datos</button>
+            <label style="color: var(--accent-gold); font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 12px; text-transform: uppercase;">Acciones Principales</label>
+            <button class="btn-main" style="background: var(--whatsapp-color); color: white;" onclick="previewGroupWA()">📲 Enviar Reporte Grupal (WhatsApp)</button>
         </div>
     </div>
 
@@ -460,11 +461,12 @@ html, body { overscroll-behavior-y: contain !important; overscroll-behavior: con
 
     <div id="v-list" class="view">
         <h1>Registros Históricos</h1>
+        <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:15px;">Toca cualquier registro para ver su tarjeta flotante y enviarlo individualmente.</p>
         <div id="lista"></div>
     </div>
 
     <div id="v-config" class="view">
-        <h1>Ajustes de la Aplicación</h1>
+        <h1>Ajustes y Configuración</h1>
         <div class="card">
             <div class="form-group">
                 <label>Nombre Personalizado de la App</label>
@@ -476,10 +478,16 @@ html, body { overscroll-behavior-y: contain !important; overscroll-behavior: con
             </div>
             <button class="btn-main" onclick="saveConfigApp()">💾 Guardar Configuración</button>
         </div>
+        <div class="card">
+            <label style="color: var(--accent-gold); font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 12px; text-transform: uppercase;">Exportación y Datos</label>
+            <button class="btn-main" onclick="exportExcel()">📊 Descargar Excel (CSV)</button>
+            <button class="btn-main" style="background: #222; color: var(--danger); margin-top: 5px; font-size: 0.85rem;" onclick="clearAllData()">🗑️ Limpiar Base de Datos</button>
+        </div>
     </div>
 
 </div>
 
+<!-- NAVBAR CON ÚNICO BOTÓN DE CONFIGURACIÓN -->
 <nav class="bottom-nav">
     <button class="nav-item active" onclick="switchView('v-metrics', this)"><span class="icon">📊</span><span>Métricas</span></button>
     <button class="nav-item" onclick="switchView('v-register', this)"><span class="icon">📝</span><span>Registrar</span></button>
@@ -493,7 +501,7 @@ html, body { overscroll-behavior-y: contain !important; overscroll-behavior: con
 <script>
 let db = JSON.parse(localStorage.getItem('luxury_db')) || [];
 let valorHora = parseFloat(localStorage.getItem('luxury_valor_hora')) || 15000;
-let appName = localStorage.getItem('luxury_app_name') || 'Luxury Bitácora Élite v8.9';
+let appName = localStorage.getItem('luxury_app_name') || 'Luxury Bitácora Élite v9.0';
 let leafletMap;
 let leafletMarkers = [];
 let activeIdToDelete = null;
@@ -542,7 +550,8 @@ function loadMarkers() {
     });
 }
 
-function openNativeGoogleMaps(address) {
+function openNativeGoogleMaps(address, event) {
+    if (event) event.stopPropagation();
     if (!address) return;
     showToast("Abriendo Google Maps en tu teléfono...", "success");
     const encodedAddress = encodeURIComponent(address);
@@ -587,7 +596,11 @@ function executeSave(lugar, fecha, horas, jornada, notas) {
     refreshSystem();
 }
 
-function openDeleteModal(id) { activeIdToDelete = id; document.getElementById('delete-modal').classList.add('open'); }
+function openDeleteModal(id, event) {
+    if (event) event.stopPropagation();
+    activeIdToDelete = id; 
+    document.getElementById('delete-modal').classList.add('open'); 
+}
 function closeDeleteModal() { document.getElementById('delete-modal').classList.remove('open'); activeIdToDelete = null; }
 
 document.getElementById('btn-confirm-delete').addEventListener('click', () => {
@@ -735,7 +748,7 @@ function refreshSystem() {
     db.forEach(r => {
         horasTotales += r.horas;
         lista.insertAdjacentHTML("beforeend", `
-            <div class="history-item" id="row-${r.id}">
+            <div class="history-item" id="row-${r.id}" onclick="previewSingleWA(${r.id})" title="Ver Tarjeta Flotante">
                 <div class="history-info">
                     <h4>${r.lugar}</h4>
                     <p>📅 ${r.fecha} | 💼 ${r.jornada}</p>
@@ -743,9 +756,9 @@ function refreshSystem() {
                 </div>
                 <div class="history-actions">
                     <div class="history-badge">${r.horas} Hrs</div>
-                    <button class="btn-action preview-trigger" onclick="previewSingleWA(${r.id})" title="Ver Tarjeta Flotante y Enviar Individual">💬</button>
-                    <button class="btn-action map-trigger" onclick="openNativeGoogleMaps('${r.lugar.replace(/'/g, "\\'")}')" title="Abrir en Google Maps">🗺️</button>
-                    <button class="btn-action delete-trigger" onclick="openDeleteModal(${r.id})" title="Eliminar">🗑️</button>
+                    <button class="btn-action wa-trigger" onclick="previewSingleWA(${r.id}); event.stopPropagation();" title="Enviar Tarjeta Individual">📲</button>
+                    <button class="btn-action map-trigger" onclick="openNativeGoogleMaps('${r.lugar.replace(/'/g, "\\'")}', event)" title="Abrir en Google Maps">🗺️</button>
+                    <button class="btn-action delete-trigger" onclick="openDeleteModal(${r.id}, event)" title="Eliminar">🗑️</button>
                 </div>
             </div>
         `);
