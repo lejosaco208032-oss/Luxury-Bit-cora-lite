@@ -2,7 +2,7 @@
 <html lang="es"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title id="app-meta-title">Luxury Bitácora Élite v9.2</title>
+    <title id="app-meta-title">Luxury Bitácora Élite v9.3</title>
 
     <meta name="theme-color" content="#0a0a0a">
 
@@ -388,7 +388,7 @@
         <div class="metrics-grid">
             <div class="metric-card" style="grid-column: span 2;">
                 <span id="st-cash">$0.00</span>
-                <label id="lbl-tarifa-label">Ingresos Estimados (Diurno/Nocturno)</label>
+                <label id="lbl-tarifa-label">Ingresos Totales (Calculados por Turno)</label>
             </div>
         </div>
 
@@ -498,7 +498,7 @@
 let db = JSON.parse(localStorage.getItem('luxury_db')) || [];
 let valorDiurno = parseFloat(localStorage.getItem('luxury_valor_diurno')) || 15000;
 let valorNocturno = parseFloat(localStorage.getItem('luxury_valor_nocturno')) || 20000;
-let appName = localStorage.getItem('luxury_app_name') || 'Luxury Bitácora Élite v9.2';
+let appName = localStorage.getItem('luxury_app_name') || 'Luxury Bitácora Élite v9.3';
 let leafletMap;
 let leafletMarkers = [];
 let activeIdToDelete = null;
@@ -612,18 +612,31 @@ document.getElementById('btn-confirm-delete').addEventListener('click', () => {
 
 function exportExcel() {
     if(db.length === 0) { showToast('No hay datos.', 'warning'); return; }
-    let csvContent = "\uFEFFFecha de Servicio;Jornada Laboral;Ubicación / Centro;Horas Realizadas;Notas\n";
-    db.forEach(r => { csvContent += `${r.fecha};${r.jornada};${r.lugar};${r.horas};${r.notas}\n`; });
+    let csvContent = "\uFEFFFecha de Servicio;Jornada Laboral;Ubicación / Centro;Horas Realizadas;Subtotal;Notas\n";
+    db.forEach(r => {
+        let tarifaRate = (r.jornada === 'Nocturno') ? valorNocturno : valorDiurno;
+        let subtotal = r.horas * tarifaRate;
+        csvContent += `${r.fecha};${r.jornada};${r.lugar};${r.horas};${subtotal};${r.notas}\n`;
+    });
     const link = document.createElement("a");
     link.setAttribute("href", URL.createObjectURL(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })));
     link.setAttribute("download", `${appName.replace(/\s+/g, '_')}.csv`);
     document.body.appendChild(link); link.click(); document.body.removeChild(link);
 }
 
-/* ===== FUNCIONES DE TARJETA FLOTANTE Y WHATSAPP ===== */
+/* ===== FUNCIONES DE CÁLCULO INDIVIDUAL Y WHATSAPP ===== */
+function calculateTurnoSubtotal(jornada, horas) {
+    let rate = valorDiurno;
+    if (jornada === 'Nocturno') {
+        rate = valorNocturno;
+    } else if (jornada === 'Mixto') {
+        rate = (valorDiurno + valorNocturno) / 2;
+    }
+    return horas * rate;
+}
+
 function generateSingleText(r, index = null) {
-    let tarifaRate = (r.jornada === 'Nocturno') ? valorNocturno : valorDiurno;
-    let subtotal = r.horas * tarifaRate;
+    let subtotal = calculateTurnoSubtotal(r.jornada, r.horas);
     let text = `👑 *${appName.toUpperCase()}*\n`;
     text += `====================\n`;
     if(index !== null) text += `📋 *REGISTRO Nº ${index + 1}*\n`;
@@ -646,8 +659,7 @@ function generateGroupText() {
     let totalHrs = 0;
     let totalIngresos = 0;
     db.forEach((r, i) => {
-        let tarifaRate = (r.jornada === 'Nocturno') ? valorNocturno : valorDiurno;
-        let subtotal = r.horas * tarifaRate;
+        let subtotal = calculateTurnoSubtotal(r.jornada, r.horas);
         text += `*📋 REGISTRO Nº ${i + 1}*\n`;
         text += `📅 *Fecha:* ${r.fecha}\n`;
         text += `📍 *Lugar:* ${r.lugar}\n`;
@@ -755,14 +767,14 @@ function refreshSystem() {
     
     db.forEach(r => {
         horasTotales += r.horas;
-        let tarifaRate = (r.jornada === 'Nocturno') ? valorNocturno : valorDiurno;
-        ingresosTotales += (r.horas * tarifaRate);
+        let subtotal = calculateTurnoSubtotal(r.jornada, r.horas);
+        ingresosTotales += subtotal;
 
         lista.insertAdjacentHTML("beforeend", `
             <div class="history-item" id="row-${r.id}" onclick="previewSingleWA(${r.id})" title="Ver Tarjeta Flotante">
                 <div class="history-info">
                     <h4>${r.lugar}</h4>
-                    <p>📅 ${r.fecha} | 💼 ${r.jornada}</p>
+                    <p>📅 ${r.fecha} | 💼 ${r.jornada} ($${subtotal.toLocaleString()})</p>
                     ${r.notas ? `<div class="note">💬 ${r.notas}</div>` : ''}
                 </div>
                 <div class="history-actions">
@@ -777,7 +789,7 @@ function refreshSystem() {
     document.getElementById('st-t').innerText = db.length;
     document.getElementById('st-h').innerText = horasTotales;
     document.getElementById('st-cash').innerText = `$${ingresosTotales.toLocaleString()}`;
-    document.getElementById('lbl-tarifa-label').innerText = `Ingresos (D: $${valorDiurno.toLocaleString()} / N: $${valorNocturno.toLocaleString()})`;
+    document.getElementById('lbl-tarifa-label').innerText = `Ingresos Totales (D: $${valorDiurno.toLocaleString()} / N: $${valorNocturno.toLocaleString()})`;
     
     let porcentaje = Math.min((horasTotales / 160) * 100, 100);
     document.getElementById('metric-progress').style.width = `${porcentaje}%`;
