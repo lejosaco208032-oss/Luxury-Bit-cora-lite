@@ -1,4 +1,4 @@
-# Luxury Bitácora Élite v9.4
+# Luxury Bitácora Élite v8.8
 
 Proyecto PWA generado con PWA Craft Ultra v4.7.2 y blindado contra reinicios nativos.
 
