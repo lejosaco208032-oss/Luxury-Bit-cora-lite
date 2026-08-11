@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title id="app-meta-title">Luxury Bitácora Élite v10.18</title>
+    <title id="app-meta-title">Luxury Bitácora Élite v10.14</title>
 
     <meta name="theme-color" content="#0a0a0a">
 
@@ -152,16 +152,8 @@
             border: 1px solid var(--accent-gold);
             border-radius: 12px !important;
             box-shadow: 0 10px 25px rgba(0,0,0,0.7) !important;
-            max-width: 280px;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
         }
-        .leaflet-popup-content {
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            white-space: normal;
-        }
-        .leaflet-popup-content b { color: var(--accent-gold); font-size: 0.95rem; display: block; margin-bottom: 4px; }
+        .leaflet-popup-content b { color: var(--accent-gold); font-size: 0.95rem; }
         .leaflet-container a.leaflet-popup-close-button { color: var(--text-muted) !important; }
 
         #search-results-container {
@@ -179,16 +171,15 @@
             border-radius: 10px;
             cursor: pointer;
             transition: all 0.2s;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
         }
         .search-result-option:hover {
             border-color: var(--accent-gold);
             background: #222;
         }
-        .search-result-option h5 { font-size: 0.95rem; color: var(--accent-gold); margin-bottom: 3px; word-wrap: break-word; }
-        .search-result-option p { font-size: 0.8rem; color: var(--text-muted); word-wrap: break-word; }
+        .search-result-option h5 { font-size: 0.95rem; color: var(--accent-gold); margin-bottom: 3px; }
+        .search-result-option p { font-size: 0.8rem; color: var(--text-muted); }
 
+        /* Calendario Visual */
         .cal-day {
             padding: 8px 4px;
             border: 1px solid var(--border-color);
@@ -222,20 +213,16 @@
             border-color: rgba(39, 174, 96, 0.4);
             background: linear-gradient(135deg, rgba(39, 174, 96, 0.05), var(--card-bg));
         }
-        .history-item.is-pendiente {
-            border-left: 4px solid var(--warning);
-        }
         .history-item:hover { border-color: rgba(212, 175, 55, 0.4); }
         .history-item.is-pagado:hover { border-color: var(--paid-color); }
 
-        .history-info { max-width: 72%; word-wrap: break-word; overflow-wrap: break-word; }
-        .history-info h4 { margin: 0 0 2px 0; font-size: 1.05rem; color: #fff; word-wrap: break-word; }
-        .history-info .address-sub { font-size: 0.82rem; color: var(--accent-gold); margin-bottom: 4px; word-wrap: break-word; overflow-wrap: break-word; }
+        .history-info h4 { margin: 0 0 2px 0; font-size: 1.05rem; color: #fff; }
+        .history-info .address-sub { font-size: 0.82rem; color: var(--accent-gold); margin-bottom: 4px; }
         .history-item.is-pagado .address-sub { color: #2ecc71; }
-        .history-info p { margin: 0; font-size: 0.85rem; color: var(--text-muted); word-wrap: break-word; }
-        .history-info .note { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; font-style: italic; word-wrap: break-word; }
+        .history-info p { margin: 0; font-size: 0.85rem; color: var(--text-muted); }
+        .history-info .note { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; font-style: italic; }
         
-        .history-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .history-actions { display: flex; align-items: center; gap: 8px; }
         .history-badge {
             background: rgba(212, 175, 55, 0.12);
             color: var(--accent-gold);
@@ -249,19 +236,6 @@
             background: rgba(39, 174, 96, 0.15);
             color: #2ecc71;
             border-color: rgba(39, 174, 96, 0.3);
-        }
-
-        .pending-notice {
-            display: inline-block;
-            background: rgba(241, 196, 15, 0.15);
-            color: var(--warning);
-            font-size: 0.7rem;
-            font-weight: 800;
-            padding: 2px 8px;
-            border-radius: 6px;
-            border: 1px solid rgba(241, 196, 15, 0.3);
-            margin-top: 4px;
-            text-transform: uppercase;
         }
 
         .btn-action { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.1rem; padding: 5px; }
@@ -300,7 +274,6 @@
             background: #181818; border: 1px solid rgba(212, 175, 55, 0.3);
             border-radius: 14px; padding: 16px; text-align: left; margin: 15px 0;
             font-family: monospace; font-size: 0.85rem; color: #e2e8f0; white-space: pre-wrap; max-height: 45vh; overflow-y: auto;
-            word-wrap: break-word; overflow-wrap: break-word;
         }
         .modal-buttons { display: flex; gap: 12px; }
         .btn-modal { flex: 1; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; border: none; }
@@ -332,7 +305,9 @@
 <div id="day-detail-modal" class="modal-overlay">
     <div class="modal-content">
         <h3 id="day-modal-title" style="color:var(--accent-gold); margin-bottom:10px; font-size:1.1rem;">Detalle del Día</h3>
-        <div id="day-modal-body" style="overflow-y: auto; max-height: 50vh; display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px;"></div>
+        <div id="day-modal-body" style="overflow-y: auto; max-height: 50vh; display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px;">
+            <!-- Turnos inyectados por JS -->
+        </div>
         <div class="modal-buttons">
             <button class="btn-modal cancel" onclick="closeDayDetailModal()">Cerrar</button>
         </div>
@@ -394,7 +369,7 @@
     </div>
 </div>
 
-<!-- MODAL TARJETA FLOTANTE -->
+<!-- MODAL TARJETA FLOTANTE (ESTÁNDAR Y CUENTA DE COBRO) -->
 <div id="floating-modal" class="modal-overlay">
     <div class="modal-content">
         <h3 id="floating-modal-title" style="color:var(--accent-gold); margin-bottom:5px; font-size:1.1rem;">Tarjeta</h3>
@@ -454,7 +429,9 @@
                 <h3 id="calendar-month-year" style="color:var(--accent-gold); text-transform:capitalize;">Agosto 2026</h3>
                 <button onclick="nextMonth()" style="background:none; border:1px solid #333; color:white; padding:8px 12px; border-radius:8px; cursor:pointer;">▶</button>
             </div>
-            <div id="calendar-grid" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:5px; text-align:center; font-size: 0.75rem;"></div>
+            <div id="calendar-grid" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:5px; text-align:center; font-size: 0.75rem;">
+                <!-- Generado por JS -->
+            </div>
         </div>
         <div class="card">
             <button class="btn-main" onclick="exportToICS()" style="background: #222; border: 1px solid var(--accent-gold); color: var(--accent-gold);">📅 Exportar Todo a Calendar (.ics)</button>
@@ -474,13 +451,13 @@
 
             <div class="form-group">
                 <label>Nombre del Lugar / Cliente *</label>
-                <input type="text" id="f-nombre" placeholder="Ej. Clínica, Conjunto Residencial...">
+                <input type="text" id="f-nombre" placeholder="Ej. Clínica, Centro Comercial...">
             </div>
             
             <div class="form-group">
-                <label>Dirección Exacta o Detalle del Lugar *</label>
+                <label>Dirección Exacta (Calle / Carrera / Cruce) *</label>
                 <div style="display: flex; gap: 8px;">
-                    <input type="text" id="f-lugar" placeholder="Ej. Cra. 19 #47-02, Soledad" style="flex: 1;">
+                    <input type="text" id="f-lugar" placeholder="Ej. Calle 72 con Carrera 43" style="flex: 1;">
                     <button type="button" onclick="saveCurrentAsFavorite()" style="width: 110px; background: #222; border: 1px solid var(--accent-gold); color: var(--accent-gold); border-radius: 10px; font-size: 0.8rem; cursor: pointer;">⭐ Favorito</button>
                 </div>
             </div>
@@ -524,7 +501,7 @@
             </div>
 
             <div class="form-group" style="margin-top:15px;">
-                <input type="text" id="mapSearch" placeholder="Ej: Puerto Millo, Conjunto Residencial, Calle 72...">
+                <input type="text" id="mapSearch" placeholder="Ej: Clínica Portoazul, Centro, Parque...">
             </div>
             <button class="btn-main" onclick="searchMap()">🔎 Buscar Ubicación Local</button>
             
@@ -582,7 +559,7 @@ let db = JSON.parse(localStorage.getItem('luxury_db')) || [];
 let favorites = JSON.parse(localStorage.getItem('luxury_favorites')) || [];
 let valorDiurno = parseFloat(localStorage.getItem('luxury_valor_diurno')) || 15000;
 let valorNocturno = parseFloat(localStorage.getItem('luxury_valor_nocturno')) || 20000;
-let appName = localStorage.getItem('luxury_app_name') || 'Luxury Bitácora Élite v10.18';
+let appName = localStorage.getItem('luxury_app_name') || 'Luxury Bitácora Élite v10.14';
 let leafletMap;
 let darkTileLayer, satTileLayer;
 let currentLayerMode = 'dark';
@@ -697,6 +674,7 @@ function toggleMapLayer() {
     }
 }
 
+// --- CALENDARIO VISUAL LOGIC CON DETALLE AL PRESIONAR ---
 function renderCalendar() {
     const grid = document.getElementById('calendar-grid');
     const title = document.getElementById('calendar-month-year');
@@ -717,7 +695,7 @@ function renderCalendar() {
         let dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         let turnosDia = db.filter(r => r.fecha === dateStr);
         let dots = turnosDia.map(t => {
-            let colorDot = t.pagado ? '#2ecc71' : '#f1c40f';
+            let colorDot = t.pagado ? '#2ecc71' : (t.jornada === 'Diurno' ? '#d4af37' : '#33ccff');
             return `<div style="width:6px; height:6px; border-radius:50%; background:${colorDot}; display:inline-block; margin:1px;"></div>`;
         }).join('');
         let hasClass = turnosDia.length > 0 ? 'has-turno' : '';
@@ -740,15 +718,14 @@ function showDayDetails(date) {
 
     if (turnos.length > 0) {
         turnos.forEach((t) => {
-            let estadoBadge = t.pagado ? `<span style="color:#2ecc71; font-weight:bold;">🟢 Pagado / Aprobado</span>` : `<span style="color:var(--warning); font-weight:bold;">⚠️ PENDIENTE DE PAGO (SIN PAGAR)</span>`;
+            let estadoBadge = t.pagado ? `<span style="color:#2ecc71; font-weight:bold;">🟢 Pagado / Aprobado</span>` : `<span style="color:var(--accent-gold); font-weight:bold;">⏳ Pendiente de Pago</span>`;
             bodyEl.insertAdjacentHTML("beforeend", `
-                <div style="background:#1e1e1e; border:1px solid ${t.pagado ? 'rgba(39,174,96,0.4)' : 'rgba(241,196,15,0.4)'}; padding:14px; border-radius:12px; word-wrap:break-word; overflow-wrap:break-word;">
-                    <h4 style="color:var(--accent-gold); margin-bottom:4px; font-size:1rem; word-wrap:break-word;">🏢 ${t.nombre || 'Servicio'}</h4>
-                    <p style="font-size:0.85rem; color:#fff; margin-bottom:2px; word-wrap:break-word; overflow-wrap:break-word;">📍 ${t.lugar}</p>
+                <div style="background:#1e1e1e; border:1px solid ${t.pagado ? 'rgba(39,174,96,0.4)' : 'var(--border-color)'}; padding:14px; border-radius:12px;">
+                    <h4 style="color:var(--accent-gold); margin-bottom:4px; font-size:1rem;">🏢 ${t.nombre || 'Servicio'}</h4>
+                    <p style="font-size:0.85rem; color:#fff; margin-bottom:2px;">📍 ${t.lugar}</p>
                     <p style="font-size:0.8rem; color:var(--text-muted);">💼 Jornada: ${t.jornada} | ⏱️ ${t.horas} Hrs</p>
-                    <p style="font-size:0.85rem; color:var(--accent-gold); font-weight:bold; margin-top:4px;">💰 Subtotal: $${t.subtotal.toLocaleString()}</p>
-                    <div style="margin-top:6px;">${estadoBadge}</div>
-                    ${t.notas ? `<p style="font-size:0.75rem; color:var(--text-muted); font-style:italic; margin-top:4px; word-wrap:break-word;">💬 ${t.notas}</p>` : ''}
+                    <p style="font-size:0.85rem; color:var(--accent-gold); font-weight:bold; margin-top:4px;">💰 Subtotal: $${t.subtotal.toLocaleString()} — ${estadoBadge}</p>
+                    ${t.notas ? `<p style="font-size:0.75rem; color:var(--text-muted); font-style:italic; margin-top:4px;">💬 ${t.notas}</p>` : ''}
                     <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
                         <button onclick="togglePaidStatus(${t.id}); showDayDetails('${date}'); event.stopPropagation();" style="flex:1; background:${t.pagado ? '#333' : '#27ae60'}; color:white; border:none; padding:8px; border-radius:8px; font-size:0.75rem; font-weight:bold; cursor:pointer;">${t.pagado ? '↩️ Marcar Pendiente' : '✅ Aprobar Pago'}</button>
                         <button onclick="previewSingleWA(${t.id}); closeDayDetailModal();" style="flex:1; background:var(--whatsapp-color); color:white; border:none; padding:8px; border-radius:8px; font-size:0.75rem; font-weight:bold; cursor:pointer;">📲 Turno</button>
@@ -768,6 +745,7 @@ function closeDayDetailModal() {
     document.getElementById('day-detail-modal').classList.remove('open');
 }
 
+// --- CAMBIAR ESTADO DE PAGO / APROBACIÓN ---
 function togglePaidStatus(id, event) {
     if (event) event.stopPropagation();
     const item = db.find(r => r.id === id);
@@ -780,16 +758,17 @@ function togglePaidStatus(id, event) {
     if (item.pagado) {
         showToast("Turno aprobado y marcado como pagado 🟢");
     } else {
-        showToast("Turno devuelto a estado pendiente (Sin pagar) ⚠️", "warning");
+        showToast("Turno devuelto a estado pendiente ⏳", "warning");
     }
 }
 
+// --- EXPORTAR A ICS ---
 function exportToICS() {
     if(db.length === 0) { showToast('No hay datos para exportar', 'warning'); return; }
     let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Luxury Bitacora Elite//ES\n";
     db.forEach(r => {
         let dateNoDash = r.fecha.replace(/-/g, '');
-        icsContent += `BEGIN:VEVENT\nSUMMARY:Turno: ${r.nombre || 'Servicio'} ${r.pagado ? '(PAGADO)' : '(PENDIENTE)'}\nDTSTART:${dateNoDash}\nDTEND:${dateNoDash}\nDESCRIPTION:Lugar: ${r.lugar} - Notas: ${r.notas}\nEND:VEVENT\n`;
+        icsContent += `BEGIN:VEVENT\nSUMMARY:Turno: ${r.nombre || 'Servicio'} ${r.pagado ? '(PAGADO)' : ''}\nDTSTART:${dateNoDash}\nDTEND:${dateNoDash}\nDESCRIPTION:Lugar: ${r.lugar} - Notas: ${r.notas}\nEND:VEVENT\n`;
     });
     icsContent += "END:VCALENDAR";
     
@@ -837,7 +816,7 @@ function saveCurrentAsFavorite() {
     const nombre = document.getElementById('f-nombre').value.trim();
     const lugar = document.getElementById('f-lugar').value.trim();
     if (!lugar) {
-        showToast("Escribe una dirección o lugar primero", "warning");
+        showToast("Escribe una dirección primero", "warning");
         return;
     }
     if (!favorites.some(f => f.lugar === lugar)) {
@@ -864,9 +843,8 @@ function loadMarkers() {
         if (r.lugar) {
             let latOffset = (idx * 0.002) * (idx % 2 === 0 ? 1 : -1);
             let lngOffset = (idx * 0.002) * (idx % 2 === 0 ? -1 : 1);
-            let estadoPopup = r.pagado ? '<br><span style="color:#2ecc71;">🟢 Pagado</span>' : '<br><span style="color:#f1c40f;">⚠️ Pendiente de Pago</span>';
             let marker = L.marker([10.9639 + latOffset, -74.7964 + lngOffset], { icon: goldIcon }).addTo(leafletMap)
-                      .bindPopup(`<b>${r.nombre || 'Lugar'}</b><br>${r.lugar}${estadoPopup}`);
+                      .bindPopup(`<b>${r.nombre || 'Lugar'}</b><br>${r.lugar}${r.pagado ? '<br><span style="color:#2ecc71;">🟢 Pagado</span>' : ''}`);
             leafletMarkers.push(marker);
         }
     });
@@ -879,68 +857,6 @@ function openWazeNavigation(address, event) {
     window.open(`https://waze.com/ul?q=${encodeURIComponent(address + ', Colombia')}&navigate=yes`, '_blank');
 }
 
-// NUEVA FUNCIÓN OPTIMIZADA PARA DIRECCIÓN POSTAL (Regla de Oro, Paso 4 y 9)
-function formatFullAddress(item, placeName = "") {
-    let addr = item.address || {};
-    let parts = [];
-
-    // 1. Componentes de la vía
-    let road = addr.road || addr.pedestrian || addr.footway || addr.path || addr.residential || "";
-    let houseNumber = addr.house_number || "";
-    let streetPart = "";
-
-    if (road && houseNumber) {
-        // Evitar duplicar símbolos de numeral (Ej: Calle 30 # #13-65)
-        if (road.includes('#') || road.toLowerCase().includes('no.')) {
-            streetPart = `${road} ${houseNumber}`;
-        } else {
-            streetPart = `${road} #${houseNumber}`;
-        }
-    } else if (road) {
-        streetPart = road;
-    } else if (houseNumber) {
-        streetPart = `#${houseNumber}`;
-    }
-
-    if (streetPart) parts.push(streetPart);
-
-    // 2. Barrio / Sector
-    let neighbourhood = addr.neighbourhood || addr.suburb || addr.quarter || addr.city_district || "";
-    if (neighbourhood) parts.push(neighbourhood);
-
-    // 3. Ciudad / Municipio
-    let city = addr.city || addr.town || addr.municipality || addr.village || "";
-    if (city) parts.push(city);
-
-    // 4. Departamento
-    let state = addr.state || addr.county || addr.region || "";
-    if (state) parts.push(state);
-
-    // Limpieza y Deduplicación Inteligente
-    let uniqueParts = [];
-    let seen = new Set();
-    
-    // Si conocemos el nombre del lugar (Ej: "Puerto Millo"), lo agregamos a vistos
-    // para que si el barrio/calle se llama igual, no se repita en la dirección.
-    if (placeName) {
-        seen.add(placeName.toLowerCase().trim());
-    }
-
-    for (let p of parts) {
-        let pClean = p.trim();
-        let pLower = pClean.toLowerCase();
-        
-        // Evitamos repetir valores vacíos o ya vistos (Ej: "Soledad, Soledad")
-        if (!seen.has(pLower) && pLower !== "") {
-            seen.add(pLower);
-            uniqueParts.push(pClean);
-        }
-    }
-
-    return uniqueParts.join(', ');
-}
-
-// BÚSQUEDA Y GEOCODIFICACIÓN INVERSA IMPLEMENTADA
 async function searchMap() {
     const rawQuery = document.getElementById("mapSearch").value.trim();
     const resultsContainer = document.getElementById("search-results-container");
@@ -952,89 +868,41 @@ async function searchMap() {
     let forcedQuery = rawQuery;
     let lowerQ = rawQuery.toLowerCase();
     if (!lowerQ.includes('colombia')) {
-        forcedQuery = `${rawQuery}, Barranquilla, Soledad, Atlántico, Colombia`;
+        forcedQuery = `${rawQuery}, Colombia`;
     }
 
-    showToast("Buscando ubicación exacta...", "success");
+    showToast("Buscando ubicación...", "success");
 
     try {
-        // 1. Forward Geocoding original
         let url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(forcedQuery)}&addressdetails=1&limit=5`;
         let response = await fetch(url);
         let data = await response.json();
-
-        // Fallback geocoding si no hay resultados
-        if (!data || data.length === 0) {
-            let backupUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(rawQuery + ', Colombia')}&addressdetails=1&limit=5`;
-            let backupResp = await fetch(backupUrl);
-            data = await backupResp.json();
-        }
 
         if (data && data.length > 0) {
             searchMarkers.forEach(m => leafletMap.removeLayer(m));
             searchMarkers = [];
             resultsContainer.style.display = "flex";
             
-            // 2. Sistema de Selección Inteligente (Paso 5)
-            // Damos puntuación a los resultados que ya traen datos postales completos.
-            data.forEach(d => {
-                d.score = 0;
-                if (d.address) {
-                    if (d.address.house_number) d.score += 10;
-                    if (d.address.road || d.address.pedestrian || d.address.residential) d.score += 10;
-                    if (d.address.neighbourhood || d.address.suburb) d.score += 5;
-                    if (d.address.city || d.address.town) d.score += 2;
-                }
-            });
-            // Ordenar de mayor a menor precisión
-            data.sort((a, b) => b.score - a.score);
-
-            // 3. Geocodificación Inversa para completar nodos aislados (Paso 6)
-            // Limitado a los 3 primeros resultados para respetar la cuota de la API
-            let maxToProcess = Math.min(data.length, 3);
-            for (let i = 0; i < maxToProcess; i++) {
-                let item = data[i];
-                // Si el lugar no tiene calle asignada, buscamos qué calle está en esa coordenada exacta
-                if (!item.address || (!item.address.road && !item.address.pedestrian)) {
-                    try {
-                        let revUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${item.lat}&lon=${item.lon}&addressdetails=1`;
-                        let revResp = await fetch(revUrl);
-                        let revData = await revResp.json();
-                        
-                        if (revData && revData.address) {
-                            // Combinar datos, priorizando la precisión descubierta
-                            item.address = { ...revData.address, ...item.address };
-                            if (revData.address.road) item.address.road = revData.address.road;
-                            if (revData.address.house_number) item.address.house_number = revData.address.house_number;
-                            if (revData.address.neighbourhood) item.address.neighbourhood = revData.address.neighbourhood;
-                        }
-                    } catch(e) { console.warn("Reverse geocode skip:", e); }
-                    
-                    // Pequeña pausa requerida para no saturar Nominatim (Regla: 1 req/sec)
-                    await new Promise(r => setTimeout(r, 600));
-                }
-            }
-            
-            // 4. Renderizado Final
-            data.slice(0, 5).forEach(item => {
+            data.forEach(item => {
                 const lat = parseFloat(item.lat);
                 const lon = parseFloat(item.lon);
                 
-                // Extraer el nombre del lugar con seguridad
-                const placeName = item.name || (item.address && (item.address.amenity || item.address.shop || item.address.building)) || item.display_name.split(',')[0] || rawQuery;
-
-                // Formatear dirección limpia sin redundancias
-                let cleanAddress = formatFullAddress(item, placeName);
-                if (!cleanAddress) {
-                    cleanAddress = item.display_name || rawQuery;
-                }
+                // --- EXTRACCIÓN INTELIGENTE DE DIRECCIÓN COMPLETA ---
+                let addr = item.address || {};
+                let components = [];
+                if (addr.road) components.push(addr.road);
+                if (addr.house_number) components.push(addr.house_number);
+                if (addr.suburb || addr.neighbourhood) components.push(addr.suburb || addr.neighbourhood);
+                if (addr.city || addr.town || addr.county) components.push(addr.city || addr.town || addr.county);
+                if (addr.state) components.push(addr.state);
                 
-                // Mapa y Popups con estructura mejorada (Paso 10)
+                let cleanAddress = components.length > 0 ? components.join(', ') : item.display_name;
+                const placeName = item.name || item.display_name.split(',')[0] || rawQuery;
+
                 let marker = L.marker([lat, lon], { icon: goldIcon }).addTo(leafletMap)
                     .bindPopup(`<b>${placeName}</b><br>${cleanAddress}`);
                 searchMarkers.push(marker);
 
-                // Tarjetas HTML con la dirección formateada (Paso 10)
                 const optDiv = document.createElement('div');
                 optDiv.className = 'search-result-option';
                 optDiv.innerHTML = `<h5>📍 ${placeName}</h5><p>${cleanAddress}</p>`;
@@ -1049,50 +917,16 @@ async function searchMap() {
                     executeSave(placeName, cleanAddress, new Date().toISOString().split('T')[0], defaultHrs, jornadaDefault, subtotalCalculado, `Ubicación guardada desde mapa`);
                     resultsContainer.style.display = "none";
                     document.getElementById("mapSearch").value = "";
-                    showToast(`¡Ubicación exacta guardada: ${placeName}!`);
+                    showToast(`¡Ubicación guardada: ${placeName}!`);
                     switchView('v-list', document.querySelectorAll('.nav-item')[4]);
                 };
                 resultsContainer.appendChild(optDiv);
             });
 
             leafletMap.setView([parseFloat(data[0].lat), parseFloat(data[0].lon)], 16);
-            showToast(`Se encontraron y optimizaron opciones.`);
+            showToast(`Se encontraron ${data.length} opciones.`);
         } else { 
-            // Fallback manual si Nominatim no devuelve absolutamente nada
-            searchMarkers.forEach(m => leafletMap.removeLayer(m));
-            searchMarkers = [];
-            resultsContainer.style.display = "flex";
-
-            let fallbackLat = 10.9350;
-            let fallbackLon = -74.7820;
-            let cleanCustomAddress = `${rawQuery}, Soledad, Atlántico`;
-            let placeTitle = rawQuery;
-
-            let fallbackMarker = L.marker([fallbackLat, fallbackLon], { icon: goldIcon }).addTo(leafletMap)
-                .bindPopup(`<b>${placeTitle}</b><br>${cleanCustomAddress}`);
-            searchMarkers.push(fallbackMarker);
-
-            const optDiv = document.createElement('div');
-            optDiv.className = 'search-result-option';
-            optDiv.innerHTML = `<h5>📍 ${placeTitle}</h5><p>${cleanCustomAddress}</p>`;
-            optDiv.onclick = () => {
-                leafletMap.setView([fallbackLat, fallbackLon], 17);
-                fallbackMarker.openPopup();
-                
-                let defaultHrs = 8;
-                let jornadaDefault = "Diurno";
-                let subtotalCalculado = calculateTurnoSubtotal(jornadaDefault, defaultHrs);
-                
-                executeSave(placeTitle, cleanCustomAddress, new Date().toISOString().split('T')[0], defaultHrs, jornadaDefault, subtotalCalculado, `Ubicación personalizada guardada`);
-                resultsContainer.style.display = "none";
-                document.getElementById("mapSearch").value = "";
-                showToast(`¡Ubicación guardada: ${placeTitle}!`);
-                switchView('v-list', document.querySelectorAll('.nav-item')[4]);
-            };
-            resultsContainer.appendChild(optDiv);
-
-            leafletMap.setView([fallbackLat, fallbackLon], 15);
-            showToast("Ubicación referenciada localmente con éxito.");
+            showToast("No se encontraron resultados.", "warning"); 
         }
     } catch (e) { 
         showToast("Error de red al consultar el mapa.", "danger"); 
@@ -1221,7 +1055,7 @@ function exportExcel() {
 }
 
 function generateSingleText(r) {
-    let estadoTexto = r.pagado ? "🟢 *ESTADO:* PAGADO / APROBADO" : "⚠️ *ESTADO:* PENDIENTE DE PAGO (SIN PAGAR)";
+    let estadoTexto = r.pagado ? "🟢 *ESTADO:* PAGADO / APROBADO" : "⏳ *ESTADO:* PENDIENTE DE PAGO";
     let text = `👑 *${appName.toUpperCase()}*\n`;
     text += `====================\n`;
     text += `🏢 *Lugar:* ${r.nombre || 'N/A'}\n`;
@@ -1237,7 +1071,7 @@ function generateSingleText(r) {
 }
 
 function generateInvoiceText(r) {
-    let estadoTexto = r.pagado ? "🟢 [PAGADO Y APROBADO POR LA EMPRESA]" : "⚠️ [PENDIENTE DE PAGO - NO PAGADO]";
+    let estadoTexto = r.pagado ? "🟢 [PAGADO Y APROBADO POR LA EMPRESA]" : "⏳ [PENDIENTE DE TRÁMITE]";
     let text = `📄 *CUENTA DE COBRO / SERVICIO*\n`;
     text += `====================================\n`;
     text += `🏢 *Cliente / Empresa:* ${r.nombre || 'N/A'}\n`;
@@ -1304,7 +1138,7 @@ function previewGroupWA() {
     let totalPendiente = 0;
 
     db.forEach((r, i) => {
-        let estadoStr = r.pagado ? "🟢 [PAGADO]" : "⚠️ [PENDIENTE - SIN PAGAR]";
+        let estadoStr = r.pagado ? "🟢 [PAGADO]" : "⏳ [PENDIENTE]";
         textContent += `*📋 TURNO Nº ${i + 1}* ${estadoStr}\n`;
         textContent += `🏢 *Lugar:* ${r.nombre || 'N/A'}\n`;
         textContent += `📍 *Dirección:* ${r.lugar}\n`;
@@ -1325,7 +1159,7 @@ function previewGroupWA() {
     textContent += `• Turnos Totales: ${db.length}\n`;
     textContent += `• Horas Totales: ${totalHrs} Hrs\n`;
     textContent += `• Total Cobrado / Aprobado: $${totalPagado.toLocaleString()}\n`;
-    textContent += `• Total Pendiente (Sin Pagar): $${totalPendiente.toLocaleString()}\n`;
+    textContent += `• Total Pendiente: $${totalPendiente.toLocaleString()}\n`;
     textContent += `• Valor Global: $${totalIngresos.toLocaleString()}`;
 
     currentFloatingItem = null;
@@ -1361,90 +1195,85 @@ function saveConfigApp() {
     localStorage.setItem('luxury_app_name', appName);
     localStorage.setItem('luxury_valor_diurno', valorDiurno);
     localStorage.setItem('luxury_valor_nocturno', valorNocturno);
-    
-    document.getElementById('app-meta-title').innerText = appName;
-    document.getElementById('app-dashboard-title').innerText = appName.includes('Bitácora') ? 'Dashboard Élite' : appName;
+
     showToast("Configuración guardada");
+    refreshSystem();
+    switchView('v-metrics', document.querySelectorAll('.nav-item')[0]);
 }
 
 function refreshSystem() {
-    let totalTurnos = db.length;
-    let totalHoras = 0;
-    let totalCash = 0;
-    let totalPaid = 0;
-    let totalPending = 0;
+    document.getElementById('app-meta-title').innerText = appName;
+    document.getElementById('app-dashboard-title').innerText = appName;
 
-    db.forEach(r => {
-        totalHoras += r.horas;
-        totalCash += r.subtotal;
-        if (r.pagado) {
-            totalPaid += r.subtotal;
-        } else {
-            totalPending += r.subtotal;
-        }
-    });
+    const lista = document.getElementById('lista');
+    lista.innerHTML = "";
+    let horasTotales = 0;
+    let ingresosTotales = 0;
+    let pagadoTotal = 0;
+    let pendienteTotal = 0;
 
-    document.getElementById('st-t').innerText = totalTurnos;
-    document.getElementById('st-h').innerText = totalHoras;
-    document.getElementById('st-cash').innerText = '$' + totalCash.toLocaleString();
-    document.getElementById('st-paid').innerText = '$' + totalPaid.toLocaleString();
-    document.getElementById('st-pending').innerText = '$' + totalPending.toLocaleString();
-
-    let metaHorasMes = 160;
-    let progressPercent = Math.min(Math.round((totalHoras / metaHorasMes) * 100), 100);
-    document.getElementById('metric-progress').style.width = progressPercent + '%';
-    document.getElementById('progress-desc').innerText = `${progressPercent}% completado (${totalHoras} / ${metaHorasMes} hrs objetivo).`;
-
-    const listaContainer = document.getElementById('lista');
-    listaContainer.innerHTML = "";
-
-    if(db.length === 0) {
-        listaContainer.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted);">No hay registros guardados.</div>`;
-    } else {
-        db.slice().reverse().forEach(r => {
-            let pagadoClass = r.pagado ? 'is-pagado' : 'is-pendiente';
-            let estadoBadgeText = r.pagado ? '🟢 Pagado' : '⚠️ Pendiente';
-            let paidBtnActive = r.pagado ? 'active-paid' : '';
-            
-            listaContainer.insertAdjacentHTML('beforeend', `
-                <div class="history-item ${pagadoClass}" onclick="openEditModal(${r.id}, event)">
-                    <div class="history-info">
-                        <h4>🏢 ${r.nombre || 'Servicio'}</h4>
-                        <div class="address-sub">📍 ${r.lugar}</div>
-                        <p>📅 ${r.fecha} &nbsp;|&nbsp; 💼 ${r.jornada} &nbsp;|&nbsp; ⏱️ ${r.horas}h</p>
-                        <p style="color:var(--accent-gold); font-weight:bold; margin-top:2px;">💰 Subtotal: $${r.subtotal.toLocaleString()}</p>
-                        ${r.notas ? `<div class="note">💬 ${r.notas}</div>` : ''}
-                        <div><span class="pending-notice">${estadoBadgeText}</span></div>
-                    </div>
-                    <div class="history-actions">
-                        <span class="history-badge">$${r.subtotal.toLocaleString()}</span>
-                        <button class="btn-action map-trigger" onclick="openWazeNavigation('${r.lugar}', event)" title="Navegar">🧭</button>
-                        <button class="btn-action wa-trigger" onclick="previewSingleWA(${r.id}); event.stopPropagation();" title="Enviar WhatsApp">📲</button>
-                        <button class="btn-action paid-trigger ${paidBtnActive}" onclick="togglePaidStatus(${r.id}, event)" title="Aprobar / Cambiar Pago">✅</button>
-                        <button class="btn-action delete-trigger" onclick="openDeleteModal(${r.id}, event)" title="Eliminar">🗑️</button>
-                    </div>
-                </div>
-            `);
-        });
+    db.sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+    
+    if(db.length === 0) { 
+        lista.innerHTML = `<p style="text-align:center; color:var(--text-muted); margin-top:40px;">No hay turnos registrados.</p>`; 
     }
+    
+    db.forEach(r => {
+        horasTotales += r.horas;
+        ingresosTotales += r.subtotal;
+        if (r.pagado) {
+            pagadoTotal += r.subtotal;
+        } else {
+            pendienteTotal += r.subtotal;
+        }
 
-    if (leafletMap) {
-        loadMarkers();
+        let paidClass = r.pagado ? 'is-pagado' : '';
+        let paidIconActive = r.pagado ? 'active-paid' : '';
+        let paidTitle = r.pagado ? 'Marcado como Pagado (Click para revertir)' : 'Aprobar Pago / Marcar Pagado';
+
+        lista.insertAdjacentHTML("beforeend", `
+            <div class="history-item ${paidClass}" onclick="previewSingleWA(${r.id})" title="Ver Tarjeta">
+                <div class="history-info">
+                    <h4>🏢 ${r.nombre || 'Lugar sin nombre'} ${r.pagado ? '🟢' : ''}</h4>
+                    <div class="address-sub">📍 ${r.lugar}</div>
+                    <p>📅 ${r.fecha} | 💼 ${r.jornada} ($${r.subtotal.toLocaleString()})</p>
+                    ${r.notas ? `<div class="note">💬 ${r.notas}</div>` : ''}
+                </div>
+                <div class="history-actions">
+                    <div class="history-badge">${r.horas} Hrs</div>
+                    <button class="btn-action paid-trigger ${paidIconActive}" onclick="togglePaidStatus(${r.id}, event)" title="${paidTitle}">✅</button>
+                    <button class="btn-action wa-trigger" onclick="previewSingleWA(${r.id}); event.stopPropagation();" title="WhatsApp">📲</button>
+                    <button class="btn-action map-trigger" onclick="openWazeNavigation('${r.lugar.replace(/'/g, "\\'")}', event)" title="Waze">🚗</button>
+                    <button class="btn-action edit-trigger" onclick="openEditModal(${r.id}, event)" title="Editar">✏️</button>
+                    <button class="btn-action delete-trigger" onclick="openDeleteModal(${r.id}, event)" title="Eliminar">🗑️</button>
+                </div>
+            </div>
+        `);
+    });
+    
+    document.getElementById('st-t').innerText = db.length;
+    document.getElementById('st-h').innerText = horasTotales;
+    document.getElementById('st-cash').innerText = `$${ingresosTotales.toLocaleString()}`;
+    document.getElementById('st-paid').innerText = `$${pagadoTotal.toLocaleString()}`;
+    document.getElementById('st-pending').innerText = `$${pendienteTotal.toLocaleString()}`;
+    
+    let porcentaje = Math.min((horasTotales / 160) * 100, 100);
+    document.getElementById('metric-progress').style.width = `${porcentaje}%`;
+    document.getElementById('progress-desc').innerText = `${porcentaje.toFixed(1)}% de tu meta mensual.`;
+
+    if (document.getElementById('v-calendar').classList.contains('active')) {
+        renderCalendar();
     }
 }
 
-window.onload = () => {
-    document.getElementById('cfg-nombre-app').value = appName;
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById('f-fecha').value = new Date().toISOString().split('T')[0];
     document.getElementById('cfg-valor-diurno').value = valorDiurno;
     document.getElementById('cfg-valor-nocturno').value = valorNocturno;
-    document.getElementById('app-meta-title').innerText = appName;
-    
-    const today = new Date().toISOString().split('T')[0];
-    const fFecha = document.getElementById('f-fecha');
-    if (fFecha) fFecha.value = today;
-
+    document.getElementById('cfg-nombre-app').value = appName;
+    calculateCurrentTurnValue();
     refreshSystem();
-};
+});
 </script>
 
 </body>
