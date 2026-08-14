@@ -544,11 +544,48 @@
             </div>
 
             <div class="form-group" style="margin-top:15px;">
-                <input type="text" id="mapSearch" placeholder="Ej: Clínica Portoazul, Centro...">
+                <label style="color:var(--accent-gold); font-weight:700; font-size:0.75rem; text-transform:uppercase;">📍 Dirección por componentes</label>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr 1.2fr; gap:8px; margin-top:8px;">
+                    <div>
+                        <label style="font-size:0.7rem;">Calle</label>
+                        <input type="text" id="mapCalle" inputmode="numeric" placeholder="72" oninput="updateAddressPreview()">
+                    </div>
+                    <div>
+                        <label style="font-size:0.7rem;">Carrera</label>
+                        <input type="text" id="mapCarrera" inputmode="numeric" placeholder="43" oninput="updateAddressPreview()">
+                    </div>
+                    <div>
+                        <label style="font-size:0.7rem;">Numeración</label>
+                        <input type="text" id="mapNumeracion" placeholder="21" oninput="updateAddressPreview()">
+                    </div>
+                </div>
+
+                <div style="margin-top:8px;">
+                    <label style="font-size:0.7rem;">Dirección construida</label>
+                    <input type="text" id="mapSearch" placeholder="Ej. Calle 72 # 43-21" autocomplete="street-address">
+                </div>
+                <div style="margin-top:8px;">
+                    <label style="font-size:0.7rem;">Barrio / sector / ciudad (opcional)</label>
+                    <input type="text" id="mapSector" placeholder="Ej. Alto Prado, Barranquilla" autocomplete="address-level2">
+                </div>
+
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <button type="button" onclick="clearAddressFields()" style="flex:1; background:#222; border:1px solid #444; color:#fff; border-radius:10px; padding:10px; cursor:pointer;">🧹 Limpiar</button>
+                    <button type="button" onclick="searchMap()" style="flex:2;" class="btn-main">🔎 Buscar Dirección</button>
+                </div>
             </div>
-            <button class="btn-main" onclick="searchMap()">🔎 Buscar Ubicación</button>
             
-            <div id="search-results-container"></div>
+            <div id="search-results-container">
+            <div class="card" style="margin-top:12px; padding:12px; background:#151515; border:1px solid var(--border-color);">
+                <label style="color:var(--accent-gold); font-weight:700; font-size:0.75rem; text-transform:uppercase;">🧭 Elegir navegador</label>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
+                    <button type="button" onclick="openSelectedAddress('waze')" style="background:#222; border:1px solid var(--accent-gold); color:var(--accent-gold); border-radius:10px; padding:11px; cursor:pointer; font-weight:700;">🚗 Waze</button>
+                    <button type="button" onclick="openSelectedAddress('google')" style="background:#222; border:1px solid var(--accent-gold); color:var(--accent-gold); border-radius:10px; padding:11px; cursor:pointer; font-weight:700;">🗺️ Google Maps</button>
+                </div>
+                <div id="selected-navigation-address" style="margin-top:8px; font-size:0.75rem; color:var(--text-muted); text-align:center;">Selecciona primero una dirección del mapa.</div>
+            </div>
+</div>
         </div>
     </div>
 
@@ -578,6 +615,18 @@
             </div>
             <button class="btn-main" onclick="saveConfigApp()" style="margin-top: 15px; margin-bottom: 0;">💾 Guardar Configuración</button>
         </div>
+
+        <div class="card">
+            <label style="color:var(--accent-gold); font-weight:700; font-size:0.75rem; text-transform:uppercase;">🛰️ Satélite gratuito Copernicus Sentinel-2</label>
+            <p style="font-size:0.75rem; color:var(--text-muted); margin:8px 0 12px 0;">
+                Introduce el ID de instancia WMS de Copernicus Data Space. Si queda vacío, el botón Satélite seguirá usando la capa Esri existente.
+            </p>
+            <div class="form-group" style="margin-bottom:10px;">
+                <input type="text" id="cfg-copernicus-instance" placeholder="Ej. 9d559...">
+            </div>
+            <button class="btn-main" onclick="saveCopernicusConfig()" style="margin-bottom:0;">🛰️ Guardar configuración satelital</button>
+        </div>
+
         <div class="card">
             <button class="btn-main" onclick="exportExcel()">📊 Descargar Excel (CSV)</button>
             <button class="btn-main" style="background: #222; color: var(--danger); margin-top: 5px; margin-bottom: 0; font-size: 0.85rem;" onclick="clearAllData()">🗑️ Limpiar Base de Datos</button>
@@ -604,8 +653,9 @@ let valorDiurno = parseFloat(localStorage.getItem('luxury_valor_diurno')) || 150
 let valorNocturno = parseFloat(localStorage.getItem('luxury_valor_nocturno')) || 20000;
 let appName = localStorage.getItem('luxury_app_name') || 'Luxury Bitácora Élite v10.14';
 let leafletMap;
-let darkTileLayer, satTileLayer;
+let darkTileLayer, satTileLayer, copernicusTileLayer;
 let currentLayerMode = 'dark';
+let copernicusInstanceId = localStorage.getItem('copernicus_instance_id') || '';
 let leafletMarkers = [];
 let searchMarkers = [];
 let activeIdToDelete = null;
@@ -681,6 +731,20 @@ function switchView(viewId, element) {
                     attribution: '&copy; Esri'
                 });
 
+                if (copernicusInstanceId) {
+                    copernicusTileLayer = L.tileLayer.wms(
+                        `https://sh.dataspace.copernicus.eu/ogc/wms/${encodeURIComponent(copernicusInstanceId)}`,
+                        {
+                            layers: 'TRUE_COLOR',
+                            format: 'image/jpeg',
+                            transparent: false,
+                            version: '1.3.0',
+                            maxZoom: 18,
+                            attribution: '&copy; Copernicus Sentinel-2'
+                        }
+                    );
+                }
+
                 darkTileLayer.addTo(leafletMap);
 
                 L.circle([10.9639, -74.7964], {
@@ -702,14 +766,42 @@ function switchView(viewId, element) {
 
 function toggleMapLayer() {
     const btn = document.getElementById('map-layer-btn');
+
     if (currentLayerMode === 'dark') {
         leafletMap.removeLayer(darkTileLayer);
-        satTileLayer.addTo(leafletMap);
-        currentLayerMode = 'sat';
-        btn.innerHTML = '🌙 Oscura';
-        showToast("Modo Satelital activado");
+
+        if (copernicusInstanceId) {
+            if (!copernicusTileLayer) {
+                copernicusTileLayer = L.tileLayer.wms(
+                    `https://sh.dataspace.copernicus.eu/ogc/wms/${encodeURIComponent(copernicusInstanceId)}`,
+                    {
+                        layers: 'TRUE_COLOR',
+                        format: 'image/jpeg',
+                        transparent: false,
+                        version: '1.3.0',
+                        maxZoom: 18,
+                        attribution: '&copy; Copernicus Sentinel-2'
+                    }
+                );
+            }
+            copernicusTileLayer.addTo(leafletMap);
+            currentLayerMode = 'copernicus';
+            btn.innerHTML = '🌙 Oscura';
+            showToast("Sentinel-2 / Copernicus activado");
+        } else {
+            satTileLayer.addTo(leafletMap);
+            currentLayerMode = 'sat';
+            btn.innerHTML = '🌙 Oscura';
+            showToast("Satélite Esri activado. Configura Copernicus en Ajustes para usar Sentinel-2.", "warning");
+        }
     } else {
-        leafletMap.removeLayer(satTileLayer);
+        if (currentLayerMode === 'copernicus' && copernicusTileLayer) {
+            leafletMap.removeLayer(copernicusTileLayer);
+        }
+        if (currentLayerMode === 'sat' && satTileLayer) {
+            leafletMap.removeLayer(satTileLayer);
+        }
+
         darkTileLayer.addTo(leafletMap);
         currentLayerMode = 'dark';
         btn.innerHTML = '🛰️ Satélite';
@@ -890,6 +982,32 @@ function loadMarkers() {
     });
 }
 
+let selectedNavigationAddress = "";
+
+function setSelectedNavigationAddress(address) {
+    selectedNavigationAddress = address || "";
+    const label = document.getElementById("selected-navigation-address");
+    if (label) label.textContent = selectedNavigationAddress
+        ? `📍 Dirección seleccionada: ${selectedNavigationAddress}`
+        : "Selecciona primero una dirección del mapa.";
+}
+
+function openSelectedAddress(navigatorType) {
+    const address = selectedNavigationAddress || document.getElementById("mapSearch")?.value.trim();
+    if (!address) {
+        showToast("Selecciona o escribe una dirección primero", "warning");
+        return;
+    }
+    const destination = encodeURIComponent(`${address}, Colombia`);
+    if (navigatorType === "waze") {
+        window.open(`https://waze.com/ul?q=${destination}&navigate=yes`, "_blank");
+        showToast("Abriendo Waze...", "success");
+    } else {
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${destination}`, "_blank");
+        showToast("Abriendo Google Maps...", "success");
+    }
+}
+
 function openWazeNavigation(address, event) {
     if (event) event.stopPropagation();
     if (!address) return;
@@ -897,8 +1015,36 @@ function openWazeNavigation(address, event) {
     window.open(`https://waze.com/ul?q=${encodeURIComponent(address + ', Colombia')}&navigate=yes`, '_blank');
 }
 
+function updateAddressPreview() {
+    const calle = document.getElementById("mapCalle").value.trim();
+    const carrera = document.getElementById("mapCarrera").value.trim();
+    const numeracion = document.getElementById("mapNumeracion").value.trim();
+    const search = document.getElementById("mapSearch");
+
+    if (calle || carrera || numeracion) {
+        let address = "";
+        if (calle) address += `Calle ${calle}`;
+        if (carrera) address += `${address ? " # " : "Carrera "}${carrera}`;
+        if (numeracion) address += `${carrera ? "-" : " "}${numeracion}`;
+        search.value = address;
+    }
+}
+
+function clearAddressFields() {
+    document.getElementById("mapCalle").value = "";
+    document.getElementById("mapCarrera").value = "";
+    document.getElementById("mapNumeracion").value = "";
+    document.getElementById("mapSearch").value = "";
+    document.getElementById("search-results-container").innerHTML = "";
+    document.getElementById("search-results-container").style.display = "none";
+    showToast("Campos de dirección limpiados");
+}
+
 async function searchMap() {
-    const rawQuery = document.getElementById("mapSearch").value.trim();
+    updateAddressPreview();
+    const rawAddress = document.getElementById("mapSearch").value.trim();
+    const sector = document.getElementById("mapSector").value.trim();
+    const rawQuery = [rawAddress, sector].filter(Boolean).join(", ");
     const resultsContainer = document.getElementById("search-results-container");
     resultsContainer.innerHTML = "";
     resultsContainer.style.display = "none";
@@ -914,7 +1060,7 @@ async function searchMap() {
     showToast("Buscando ubicación...", "success");
 
     try {
-        let url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(forcedQuery)}&addressdetails=1&limit=5`;
+        let url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&namedetails=1&extratags=1&limit=5&q=${encodeURIComponent(forcedQuery)}`;
         let response = await fetch(url);
         let data = await response.json();
 
@@ -928,15 +1074,33 @@ async function searchMap() {
                 const lon = parseFloat(item.lon);
                 
                 let addr = item.address || {};
-                let components = [];
-                if (addr.road) components.push(addr.road);
-                if (addr.house_number) components.push(addr.house_number);
-                if (addr.suburb || addr.neighbourhood) components.push(addr.suburb || addr.neighbourhood);
-                if (addr.city || addr.town || addr.county) components.push(addr.city || addr.town || addr.county);
-                if (addr.state) components.push(addr.state);
-                
-                let cleanAddress = components.length > 0 ? components.join(', ') : item.display_name;
-                const placeName = item.name || item.display_name.split(',')[0] || rawQuery;
+                let addressParts = [];
+
+                if (addr.road) addressParts.push(addr.road);
+                if (addr.house_number) addressParts.push(addr.house_number);
+
+                const neighborhood = addr.neighbourhood || addr.suburb || addr.quarter || addr.residential;
+                if (neighborhood && !addressParts.includes(neighborhood)) addressParts.push(neighborhood);
+
+                const locality = addr.city_district || addr.municipality || addr.locality;
+                if (locality && !addressParts.includes(locality)) addressParts.push(locality);
+
+                const city = addr.city || addr.town || addr.village || addr.county;
+                if (city && !addressParts.includes(city)) addressParts.push(city);
+
+                if (addr.state && !addressParts.includes(addr.state)) addressParts.push(addr.state);
+                if (addr.postcode && !addressParts.includes(addr.postcode)) addressParts.push(addr.postcode);
+                if (addr.country && !addressParts.includes(addr.country)) addressParts.push(addr.country);
+
+                let cleanAddress = addressParts.length >= 2
+                    ? addressParts.join(', ')
+                    : (item.display_name || rawQuery);
+
+                const placeName =
+                    item.name ||
+                    (item.namedetails && (item.namedetails.name || item.namedetails['name:es'])) ||
+                    item.display_name.split(',')[0] ||
+                    rawQuery;
 
                 let marker = L.marker([lat, lon], { icon: goldIcon }).addTo(leafletMap)
                     .bindPopup(`<b>${placeName}</b><br>${cleanAddress}`);
@@ -944,10 +1108,11 @@ async function searchMap() {
 
                 const optDiv = document.createElement('div');
                 optDiv.className = 'search-result-option';
-                optDiv.innerHTML = `<h5>📍 ${placeName}</h5><p>${cleanAddress}</p>`;
+                optDiv.innerHTML = `<h5>📍 ${placeName}</h5><p><strong>Dirección completa:</strong><br>${cleanAddress}</p>`;
                 optDiv.onclick = () => {
                     leafletMap.setView([lat, lon], 17);
                     marker.openPopup();
+                    setSelectedNavigationAddress(cleanAddress);
                     
                     let defaultHrs = 8;
                     let jornadaDefault = "Diurno";
@@ -956,6 +1121,10 @@ async function searchMap() {
                     executeSave(placeName, cleanAddress, new Date().toISOString().split('T')[0], defaultHrs, jornadaDefault, subtotalCalculado, `Ubicación guardada desde mapa`);
                     resultsContainer.style.display = "none";
                     document.getElementById("mapSearch").value = "";
+                    document.getElementById("mapCalle").value = "";
+                    document.getElementById("mapCarrera").value = "";
+                    document.getElementById("mapNumeracion").value = "";
+                    document.getElementById("mapSector").value = "";
                     showToast(`¡Ubicación guardada: ${placeName}!`);
                     switchView('v-list', document.querySelectorAll('.nav-item')[4]);
                 };
@@ -1240,6 +1409,42 @@ function saveConfigApp() {
     switchView('v-metrics', document.querySelectorAll('.nav-item')[0]);
 }
 
+function saveCopernicusConfig() {
+    const input = document.getElementById('cfg-copernicus-instance').value.trim();
+
+    copernicusInstanceId = input;
+    localStorage.setItem('copernicus_instance_id', copernicusInstanceId);
+
+    if (leafletMap) {
+        if (copernicusTileLayer && leafletMap.hasLayer(copernicusTileLayer)) {
+            leafletMap.removeLayer(copernicusTileLayer);
+        }
+
+        copernicusTileLayer = null;
+
+        if (copernicusInstanceId) {
+            copernicusTileLayer = L.tileLayer.wms(
+                `https://sh.dataspace.copernicus.eu/ogc/wms/${encodeURIComponent(copernicusInstanceId)}`,
+                {
+                    layers: 'TRUE_COLOR',
+                    format: 'image/jpeg',
+                    transparent: false,
+                    version: '1.3.0',
+                    maxZoom: 18,
+                    attribution: '&copy; Copernicus Sentinel-2'
+                }
+            );
+        }
+    }
+
+    showToast(
+        copernicusInstanceId
+            ? "Configuración Copernicus guardada. Abre el mapa y pulsa 🛰️ Satélite."
+            : "Copernicus desactivado. Se conservará el satélite Esri existente.",
+        copernicusInstanceId ? "success" : "warning"
+    );
+}
+
 function refreshSystem() {
     document.getElementById('app-meta-title').innerText = appName;
     document.getElementById('app-dashboard-title').innerText = appName;
@@ -1310,6 +1515,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('cfg-valor-diurno').value = valorDiurno;
     document.getElementById('cfg-valor-nocturno').value = valorNocturno;
     document.getElementById('cfg-nombre-app').value = appName;
+    document.getElementById('cfg-copernicus-instance').value = copernicusInstanceId;
     calculateCurrentTurnValue();
     refreshSystem();
 });
